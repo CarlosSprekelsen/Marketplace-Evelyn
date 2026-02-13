@@ -8,7 +8,10 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/state/auth_notifier.dart';
 import '../../features/auth/state/auth_state.dart';
+import '../../features/client/my_requests/my_requests_screen.dart';
+import '../../features/client/my_requests/request_detail_screen.dart';
 import '../../features/client/presentation/client_home_screen.dart';
+import '../../features/client/request_form/request_form_screen.dart';
 import '../../features/provider/presentation/provider_home_screen.dart';
 import '../../shared/models/user.dart';
 
@@ -37,6 +40,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/client/home',
         builder: (context, state) => const ClientHomeScreen(),
+      ),
+      GoRoute(
+        path: '/client/request/new',
+        builder: (context, state) => const RequestFormScreen(),
+      ),
+      GoRoute(
+        path: '/client/requests',
+        builder: (context, state) => const MyRequestsScreen(),
+      ),
+      GoRoute(
+        path: '/client/requests/:id',
+        builder: (context, state) => RequestDetailScreen(
+          requestId: state.pathParameters['id'] ?? '',
+        ),
       ),
       GoRoute(
         path: '/provider/home',

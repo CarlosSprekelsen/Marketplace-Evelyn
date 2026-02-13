@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../auth/state/auth_notifier.dart';
 
@@ -31,8 +32,16 @@ class ClientHomeScreen extends ConsumerWidget {
               'Bienvenido, ${user?.fullName ?? ''}',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const Text('Panel cliente listo para Sprint 2.'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context.push('/client/request/new'),
+              child: const Text('Solicitar Limpieza'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: () => context.push('/client/requests'),
+              child: const Text('Mis Solicitudes'),
+            ),
           ],
         ),
       ),

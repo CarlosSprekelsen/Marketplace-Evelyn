@@ -323,7 +323,7 @@ Asignación automática: primer proveedor que acepta gana (first accept wins).
 
 ---
 
-## Sprint 0 — Scaffolding & Setup (1-2 días)
+## Sprint 0 [DONE]— Scaffolding & Setup (1-2 días)
 
 **Objetivo:** Repo funcional con backend que levanta, conecta a PostgreSQL/Redis, y responde en /health.
 
@@ -398,7 +398,7 @@ cd app && flutter run  # compila y muestra login placeholder
 
 ---
 
-## Sprint 1 — Auth completo con Refresh Token (2-3 días)
+## Sprint 1 [DONE]— Auth completo con Refresh Token (2-3 días)
 
 **Objetivo:** Registro, login, refresh token, JWT funcional end-to-end.
 
@@ -471,7 +471,7 @@ curl -X POST localhost:3000/auth/refresh -d '{"refresh_token":"..."}'
 
 ---
 
-## Sprint 2 — Crear Solicitud + Pricing (2-3 días)
+## Sprint 2 [DONE]— Crear Solicitud + Pricing (2-3 días)
 
 **Objetivo:** Cliente elige distrito del catálogo, ve precio cotizado, y crea solicitud.
 

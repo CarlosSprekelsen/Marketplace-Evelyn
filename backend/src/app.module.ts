@@ -10,6 +10,9 @@ import configuration from './config/configuration';
 import { createClient } from 'redis';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { DistrictsModule } from './districts/districts.module';
+import { PricingModule } from './pricing/pricing.module';
+import { ServiceRequestsModule } from './service-requests/service-requests.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { AuthModule } from './auth/auth.module';
     ScheduleModule.forRoot(),
     UsersModule,
     AuthModule,
+    DistrictsModule,
+    PricingModule,
+    ServiceRequestsModule,
   ],
   controllers: [AppController],
   providers: [
