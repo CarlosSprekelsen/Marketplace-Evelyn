@@ -5,7 +5,7 @@ import '../../config/environment.dart';
 class DioClient {
   late final Dio _dio;
 
-  DioClient() {
+  DioClient({List<Interceptor>? interceptors}) {
     _dio = Dio(
       BaseOptions(
         baseUrl: Environment.apiBaseUrl,
@@ -17,6 +17,10 @@ class DioClient {
         },
       ),
     );
+
+    if (interceptors != null) {
+      _dio.interceptors.addAll(interceptors);
+    }
 
     // Add interceptors
     _dio.interceptors.add(

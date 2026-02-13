@@ -44,11 +44,22 @@ export class UsersService {
 
     // Create user
     const user = this.usersRepository.create({
-      ...userData,
+      email: userData.email,
       password_hash,
+      full_name: userData.full_name,
+      phone: userData.phone,
+      role: userData.role as any,
+      district_id: userData.district_id,
     });
 
-    return this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+
+    // Reload with relations so district is included in the response
+    const loaded = await this.findById(saved.id);
+    if (!loaded) {
+      throw new Error('Failed to reload user after creation');
+    }
+    return loaded;
   }
 
   async validatePassword(user: User, password: string): Promise<boolean> {
@@ -56,13 +67,13 @@ export class UsersService {
   }
 
   async updateRefreshTokenHash(userId: string, refreshToken: string | null): Promise<void> {
-    let refresh_token_hash = null;
+    let refresh_token_hash: string | null = null;
 
     if (refreshToken) {
       refresh_token_hash = await bcrypt.hash(refreshToken, 10);
     }
 
-    await this.usersRepository.update(userId, { refresh_token_hash });
+    await this.usersRepository.update(userId, { refresh_token_hash } as any);
   }
 
   async validateRefreshToken(userId: string, refreshToken: string): Promise<boolean> {

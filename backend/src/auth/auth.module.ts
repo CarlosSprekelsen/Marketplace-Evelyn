@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { District } from '../districts/district.entity';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
+import { RolesGuard } from './roles.guard';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { JwtRefreshStrategy } from './jwt-refresh.strategy';
     TypeOrmModule.forFeature([District]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, RolesGuard],
   exports: [AuthService],
 })
 export class AuthModule {}

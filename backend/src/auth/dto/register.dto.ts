@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, IsUUID, IsIn } from 'class-validator';
 import { UserRole } from '../../users/user.entity';
 
 export class RegisterDto {
@@ -24,8 +24,9 @@ export class RegisterDto {
   @IsNotEmpty()
   phone: string;
 
-  @ApiProperty({ enum: UserRole, example: UserRole.CLIENT })
+  @ApiProperty({ enum: [UserRole.CLIENT, UserRole.PROVIDER], example: UserRole.CLIENT })
   @IsEnum(UserRole)
+  @IsIn([UserRole.CLIENT, UserRole.PROVIDER], { message: 'Role must be CLIENT or PROVIDER' })
   @IsNotEmpty()
   role: UserRole;
 
