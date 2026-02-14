@@ -12,6 +12,8 @@ import '../../features/client/my_requests/my_requests_screen.dart';
 import '../../features/client/my_requests/request_detail_screen.dart';
 import '../../features/client/presentation/client_home_screen.dart';
 import '../../features/client/request_form/request_form_screen.dart';
+import '../../features/provider/available_jobs/available_jobs_screen.dart';
+import '../../features/provider/my_jobs/my_jobs_screen.dart';
 import '../../features/provider/presentation/provider_home_screen.dart';
 import '../../shared/models/user.dart';
 
@@ -58,6 +60,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/provider/home',
         builder: (context, state) => const ProviderHomeScreen(),
+      ),
+      GoRoute(
+        path: '/provider/jobs/available',
+        builder: (context, state) => const AvailableJobsScreen(),
+      ),
+      GoRoute(
+        path: '/provider/jobs/mine',
+        builder: (context, state) => const MyJobsScreen(),
       ),
     ],
     redirect: (context, state) {

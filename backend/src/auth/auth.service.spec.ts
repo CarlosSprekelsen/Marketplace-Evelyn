@@ -42,7 +42,10 @@ describe('AuthService', () => {
     };
 
     jwtService = {
-      signAsync: jest.fn().mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token'),
+      signAsync: jest
+        .fn()
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token'),
     };
 
     configService = {
@@ -135,7 +138,10 @@ describe('AuthService', () => {
       access_token: 'access-rotated',
       refresh_token: 'refresh-rotated',
     });
-    expect(usersService.updateRefreshTokenHash).toHaveBeenCalledWith(baseUser.id, 'refresh-rotated');
+    expect(usersService.updateRefreshTokenHash).toHaveBeenCalledWith(
+      baseUser.id,
+      'refresh-rotated',
+    );
   });
 
   it('refresh invalid token: throws unauthorized', async () => {

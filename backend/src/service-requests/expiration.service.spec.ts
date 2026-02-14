@@ -58,9 +58,7 @@ describe('ExpirationService', () => {
     });
 
     it('should not throw on service error', async () => {
-      mockRequestsService.expirePendingRequests.mockRejectedValueOnce(
-        new Error('Database error'),
-      );
+      mockRequestsService.expirePendingRequests.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(service.expirePendingRequests()).rejects.toThrow('Database error');
     });

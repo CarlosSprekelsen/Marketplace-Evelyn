@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../shared/models/price_quote.dart';
+import '../../shared/models/provider_ratings_summary.dart';
 import '../../shared/models/service_request_model.dart';
 
 class ClientRequestsRepository {
@@ -51,5 +52,35 @@ class ClientRequestsRepository {
   Future<ServiceRequestModel> getRequestById(String id) async {
     final response = await _dio.get('/service-requests/$id');
     return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ServiceRequestModel> cancelRequest({
+    required String requestId,
+    required String reason,
+  }) async {
+    final response = await _dio.put(
+      '/service-requests/$requestId/cancel',
+      data: {'cancellation_reason': reason},
+    );
+    return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> submitRating({
+    required String requestId,
+    required int stars,
+    String? comment,
+  }) async {
+    await _dio.post(
+      '/service-requests/$requestId/rating',
+      data: {
+        'stars': stars,
+        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+      },
+    );
+  }
+
+  Future<ProviderRatingsSummary> getProviderRatings(String providerId) async {
+    final response = await _dio.get('/providers/$providerId/ratings');
+    return ProviderRatingsSummary.fromJson(response.data as Map<String, dynamic>);
   }
 }

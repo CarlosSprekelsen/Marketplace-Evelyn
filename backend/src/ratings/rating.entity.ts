@@ -67,7 +67,7 @@ export class Rating {
     required: false,
   })
   @Column({ type: 'text', nullable: true })
-  comment: string;
+  comment: string | null;
 
   @ApiProperty({
     description: 'Creation timestamp',

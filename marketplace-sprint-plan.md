@@ -552,7 +552,7 @@ curl -X POST localhost:3000/service-requests \
 
 ---
 
-## Sprint 3 — Matching + First Accept Wins (3-4 días)
+## Sprint 3 [DONE]— Matching + First Accept Wins (3-4 días)
 
 **Objetivo:** Proveedor ve trabajos de su distrito y acepta con asignación atómica.
 
