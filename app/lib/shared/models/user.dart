@@ -26,6 +26,7 @@ class User {
   final District? district;
   final bool isVerified;
   final bool isBlocked;
+  final bool isAvailable;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -39,6 +40,7 @@ class User {
     this.district,
     required this.isVerified,
     required this.isBlocked,
+    required this.isAvailable,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -54,6 +56,7 @@ class User {
       district: json['district'] != null ? District.fromJson(json['district']) : null,
       isVerified: json['is_verified'] as bool,
       isBlocked: json['is_blocked'] as bool,
+      isAvailable: json['is_available'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -69,6 +72,7 @@ class User {
       'district_id': districtId,
       'is_verified': isVerified,
       'is_blocked': isBlocked,
+      'is_available': isAvailable,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

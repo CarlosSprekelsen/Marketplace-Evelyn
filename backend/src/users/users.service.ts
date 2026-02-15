@@ -76,6 +76,15 @@ export class UsersService {
     await this.usersRepository.update(userId, { refresh_token_hash } as any);
   }
 
+  async setAvailability(userId: string, isAvailable: boolean): Promise<User> {
+    await this.usersRepository.update(userId, { is_available: isAvailable });
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found after update');
+    }
+    return user;
+  }
+
   async validateRefreshToken(userId: string, refreshToken: string): Promise<boolean> {
     const user = await this.findById(userId);
 

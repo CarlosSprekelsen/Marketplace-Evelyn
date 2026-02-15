@@ -17,11 +17,11 @@ class MyRequestsScreen extends ConsumerStatefulWidget {
 
 class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
   late Timer _pollTimer;
+  String? _statusFilter;
 
   @override
   void initState() {
     super.initState();
-    // Auto-poll every 10 seconds to check for status updates
     _pollTimer = Timer.periodic(
       const Duration(seconds: 10),
       (_) {
@@ -45,52 +45,97 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
       appBar: AppBar(
         title: const Text('Mis Solicitudes'),
       ),
-      body: requestsAsync.when(
-        data: (requests) {
-          if (requests.isEmpty) {
-            return const Center(
-              child: Text('No tienes solicitudes aún.'),
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () => ref.refresh(myRequestsProvider.future),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (context, index) {
-                final request = requests[index];
-                return ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  title: Text(request.district?.name ?? 'Distrito ${request.districtId}'),
-                  subtitle: Text(
-                    '${formatDateTime(request.scheduledAt)} · \$${request.priceTotal.toStringAsFixed(2)}',
-                  ),
-                  trailing: _StatusChip(status: request.status),
-                  onTap: () => context.push('/client/requests/${request.id}'),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemCount: requests.length,
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              mapDioErrorToMessage(error),
-              style: const TextStyle(color: Colors.red),
+      body: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                _filterChip('Todos', null),
+                const SizedBox(width: 6),
+                _filterChip('Pendientes', 'PENDING'),
+                const SizedBox(width: 6),
+                _filterChip('Aceptadas', 'ACCEPTED'),
+                const SizedBox(width: 6),
+                _filterChip('En curso', 'IN_PROGRESS'),
+                const SizedBox(width: 6),
+                _filterChip('Completadas', 'COMPLETED'),
+                const SizedBox(width: 6),
+                _filterChip('Canceladas', 'CANCELLED'),
+                const SizedBox(width: 6),
+                _filterChip('Expiradas', 'EXPIRED'),
+              ],
             ),
           ),
-        ),
+          Expanded(
+            child: requestsAsync.when(
+              data: (requests) {
+                final filtered = _statusFilter == null
+                    ? requests
+                    : requests
+                        .where((r) => r.status.value == _statusFilter)
+                        .toList(growable: false);
+
+                if (filtered.isEmpty) {
+                  return const Center(
+                    child: Text('No hay solicitudes con este filtro.'),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () => ref.refresh(myRequestsProvider.future),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemBuilder: (context, index) {
+                      final request = filtered[index];
+                      return ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        title: Text(request.district?.name ?? 'Distrito ${request.districtId}'),
+                        subtitle: Text(
+                          '${formatDateTime(request.scheduledAt)} · \$${request.priceTotal.toStringAsFixed(2)}',
+                        ),
+                        trailing: _StatusChip(status: request.status),
+                        onTap: () => context.push('/client/requests/${request.id}'),
+                      );
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemCount: filtered.length,
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    mapDioErrorToMessage(error),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  Widget _filterChip(String label, String? statusValue) {
+    final selected = _statusFilter == statusValue;
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) {
+        setState(() {
+          _statusFilter = statusValue;
+        });
+      },
+    );
+  }
 }
 
 class _StatusChip extends StatelessWidget {

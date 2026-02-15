@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/user.entity';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { ServiceRequestsService } from './service-requests.service';
+import { ServiceRequestStatus } from './service-request.entity';
 import { CancelServiceRequestDto } from './dto/cancel-service-request.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
 
@@ -36,9 +38,13 @@ export class ServiceRequestsController {
 
   @Get('mine')
   @Roles(UserRole.CLIENT)
-  @ApiOperation({ summary: 'List service requests for current client' })
-  async findMine(@Request() req) {
-    return this.serviceRequestsService.findMine(req.user.id);
+  @ApiOperation({ summary: 'List service requests for current client (optional ?status= filter)' })
+  async findMine(@Request() req, @Query('status') status?: string) {
+    const validStatus =
+      status && Object.values(ServiceRequestStatus).includes(status as ServiceRequestStatus)
+        ? (status as ServiceRequestStatus)
+        : undefined;
+    return this.serviceRequestsService.findMine(req.user.id, validStatus);
   }
 
   @Get('available')

@@ -169,6 +169,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState.unauthenticated;
   }
 
+  Future<void> refreshProfile() async {
+    try {
+      final user = await _repository.getProfile();
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+    } catch (_) {
+      // Keep current state if profile refresh fails
+    }
+  }
+
   void clearError() {
     if (state.isError) {
       state = AuthState.unauthenticated;

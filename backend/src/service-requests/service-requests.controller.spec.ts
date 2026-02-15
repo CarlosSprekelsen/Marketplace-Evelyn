@@ -126,9 +126,9 @@ describe('ServiceRequestsController', () => {
       const mockRequests = [mockServiceRequest];
       mockService.findMine.mockResolvedValueOnce(mockRequests);
 
-      const result = await controller.findMine({ user: mockUser });
+      const result = await controller.findMine({ user: mockUser }, undefined);
 
-      expect(mockService.findMine).toHaveBeenCalledWith('user-1');
+      expect(mockService.findMine).toHaveBeenCalledWith('user-1', undefined);
       expect(result).toEqual(mockRequests);
     });
 

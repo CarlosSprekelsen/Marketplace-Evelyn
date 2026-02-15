@@ -2,11 +2,20 @@ import 'package:dio/dio.dart';
 
 import '../../shared/models/provider_available_job.dart';
 import '../../shared/models/service_request_model.dart';
+import '../../shared/models/user.dart';
 
 class ProviderJobsRepository {
   ProviderJobsRepository(this._dio);
 
   final Dio _dio;
+
+  Future<User> setAvailability(bool isAvailable) async {
+    final response = await _dio.put(
+      '/auth/availability',
+      data: {'is_available': isAvailable},
+    );
+    return User.fromJson(response.data as Map<String, dynamic>);
+  }
 
   Future<List<ProviderAvailableJob>> getAvailableJobs() async {
     final response = await _dio.get('/service-requests/available');

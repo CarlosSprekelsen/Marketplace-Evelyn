@@ -76,32 +76,68 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   districtsAsync.when(
                     data: (districts) {
                       _districtId ??= districts.isNotEmpty ? districts.first.id : null;
-                      return DropdownButtonFormField<String>(
-                        initialValue: _districtId,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Distrito',
-                        ),
-                        items: districts
-                            .map((district) {
-                              return DropdownMenuItem<String>(
-                                value: district.id,
-                                child: Text(district.name),
-                              );
-                            })
-                            .toList(growable: false),
-                        onChanged: (value) {
-                          setState(() {
-                            _districtId = value;
-                            _quote = null;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Selecciona un distrito';
-                          }
-                          return null;
-                        },
+                      final selectedDistrict = districts.where((d) => d.id == _districtId).firstOrNull;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          DropdownButtonFormField<String>(
+                            initialValue: _districtId,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Distrito',
+                            ),
+                            items: districts
+                                .map((district) {
+                                  return DropdownMenuItem<String>(
+                                    value: district.id,
+                                    child: Text(district.name),
+                                  );
+                                })
+                                .toList(growable: false),
+                            onChanged: (value) {
+                              setState(() {
+                                _districtId = value;
+                                _quote = null;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Selecciona un distrito';
+                              }
+                              return null;
+                            },
+                          ),
+                          if (selectedDistrict != null) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(
+                                  selectedDistrict.hasActiveProviders
+                                      ? Icons.check_circle
+                                      : Icons.warning_amber_rounded,
+                                  size: 16,
+                                  color: selectedDistrict.hasActiveProviders
+                                      ? Colors.green
+                                      : Colors.orange,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    selectedDistrict.hasActiveProviders
+                                        ? 'Hay proveedores activos en este distrito'
+                                        : 'No hay proveedores activos — tu solicitud podría expirar',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: selectedDistrict.hasActiveProviders
+                                          ? Colors.green.shade700
+                                          : Colors.orange.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       );
                     },
                     loading: () => const Padding(
@@ -203,23 +239,26 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   if (_quote != null) ...[
                     const SizedBox(height: 16),
                     Card(
+                      color: Colors.green.shade50,
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Cotizacion',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            Text(
+                              _quote!.districtName,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 8),
-                            Text('Distrito: ${_quote!.districtName}'),
-                            Text('Horas: ${_quote!.hours} hora${_quote!.hours == 1 ? '' : 's'}'),
-                            Text('Precio por hora: ${_quote!.pricePerHour.toStringAsFixed(2)}'),
+                            Text(
+                              '${_quote!.hours} hora${_quote!.hours == 1 ? '' : 's'} x \$${_quote!.pricePerHour.toStringAsFixed(2)}/hora',
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                            const Divider(height: 20),
                             Text(
                               'Total: \$${_quote!.priceTotal.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,
                               ),

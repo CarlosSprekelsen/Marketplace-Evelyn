@@ -41,8 +41,13 @@ class ClientRequestsRepository {
     return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<List<ServiceRequestModel>> getMyRequests() async {
-    final response = await _dio.get('/service-requests/mine');
+  Future<List<ServiceRequestModel>> getMyRequests({String? status}) async {
+    final response = await _dio.get(
+      '/service-requests/mine',
+      queryParameters: {
+        if (status != null) 'status': status,
+      },
+    );
     final data = response.data as List<dynamic>;
     return data
         .map((item) => ServiceRequestModel.fromJson(item as Map<String, dynamic>))

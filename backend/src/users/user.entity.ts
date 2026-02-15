@@ -82,6 +82,13 @@ export class User {
   @Column({ type: 'boolean', default: false })
   is_blocked: boolean;
 
+  @ApiProperty({
+    description: 'Whether the provider is available for jobs',
+    example: true,
+  })
+  @Column({ type: 'boolean', default: true })
+  is_available: boolean;
+
   @Column({ type: 'varchar', nullable: true })
   refresh_token_hash: string;
 

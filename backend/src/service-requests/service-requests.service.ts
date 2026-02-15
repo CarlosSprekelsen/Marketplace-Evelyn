@@ -46,7 +46,7 @@ export class ServiceRequestsService {
     }
 
     const quote = await this.pricingService.getQuote(dto.district_id, dto.hours_requested);
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
     const request = this.serviceRequestsRepository.create({
       client_id: client.id,
@@ -69,6 +69,9 @@ export class ServiceRequestsService {
   async findAvailableForProvider(provider: User) {
     if (provider.role !== UserRole.PROVIDER) {
       throw new ForbiddenException('Only providers can view available requests');
+    }
+    if (provider.is_available === false) {
+      return [];
     }
 
     const pendingRequests = await this.serviceRequestsRepository.find({
@@ -101,6 +104,9 @@ export class ServiceRequestsService {
   async acceptRequest(id: string, provider: User) {
     if (provider.role !== UserRole.PROVIDER) {
       throw new ForbiddenException('Only providers can accept requests');
+    }
+    if (provider.is_available === false) {
+      throw new ForbiddenException('Provider is currently unavailable');
     }
     if (!provider.is_verified) {
       throw new ForbiddenException('Provider must be verified to accept requests');
@@ -313,9 +319,13 @@ export class ServiceRequestsService {
     };
   }
 
-  async findMine(clientId: string) {
+  async findMine(clientId: string, status?: ServiceRequestStatus) {
+    const where: Record<string, unknown> = { client_id: clientId };
+    if (status) {
+      where.status = status;
+    }
     return this.serviceRequestsRepository.find({
-      where: { client_id: clientId },
+      where,
       relations: ['district', 'provider'],
       order: { created_at: 'DESC' },
     });

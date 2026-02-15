@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Body,
   UseGuards,
   Request,
@@ -14,16 +15,21 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { SetAvailabilityDto } from './dto/set-availability.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtRefreshAuthGuard } from './jwt-refresh-auth.guard';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
 import { UserRole } from '../users/user.entity';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Post('register')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
@@ -74,6 +80,18 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @Put('availability')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PROVIDER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle provider availability (online/offline)' })
+  @ApiResponse({ status: 200, description: 'Availability updated' })
+  async setAvailability(@Request() req, @Body() dto: SetAvailabilityDto) {
+    const user = await this.usersService.setAvailability(req.user.id, dto.is_available);
+    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    return safeUser;
   }
 
   @Get('provider-zone')
