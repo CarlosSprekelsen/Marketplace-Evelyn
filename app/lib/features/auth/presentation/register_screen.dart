@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../config/environment.dart';
 import '../../../shared/models/user.dart';
 import '../state/auth_notifier.dart';
 
@@ -144,7 +145,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                       _selectedDistrictId ??= districts.first.id;
                       return DropdownButtonFormField<String>(
-                        initialValue: _selectedDistrictId,
+                        value: _selectedDistrictId,
                         decoration: const InputDecoration(
                           labelText: 'Distrito',
                           border: OutlineInputBorder(),
@@ -176,9 +177,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: CircularProgressIndicator(),
                       ),
                     ),
-                    error: (_, __) => const Text(
-                      'No se pudo cargar distritos. Verifica backend y red.',
-                      style: TextStyle(color: Colors.red),
+                    error: (error, _) => Column(
+                      children: [
+                        Text(
+                          'No se pudo cargar distritos. Verifica backend y red.\n'
+                          'URL: ${Environment.apiBaseUrl}\n'
+                          'Error: $error',
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: () => ref.invalidate(districtsProvider),
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),

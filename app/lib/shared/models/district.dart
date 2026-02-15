@@ -13,7 +13,7 @@ class District {
     return District(
       id: json['id'] as String,
       name: json['name'] as String,
-      isActive: json['is_active'] as bool,
+      isActive: json['is_active'] as bool? ?? true,
     );
   }
 
