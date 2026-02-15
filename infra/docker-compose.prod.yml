@@ -50,7 +50,9 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30m}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://api.yourdomain.com}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://claudiasrv.duckdns.org}
+    ports:
+      - "127.0.0.1:3000:3000"
     networks:
       - backend
     healthcheck:
