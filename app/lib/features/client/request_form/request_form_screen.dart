@@ -3,11 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/price_quote.dart';
+import '../../../shared/utils/date_formatter.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../state/client_requests_providers.dart';
 
 class RequestFormScreen extends ConsumerStatefulWidget {
-  const RequestFormScreen({super.key});
+  const RequestFormScreen({
+    super.key,
+    this.prefillDistrictId,
+    this.prefillAddress,
+    this.prefillHours,
+  });
+
+  final String? prefillDistrictId;
+  final String? prefillAddress;
+  final int? prefillHours;
 
   @override
   ConsumerState<RequestFormScreen> createState() => _RequestFormScreenState();
@@ -24,6 +34,20 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
   bool _loadingQuote = false;
   bool _submitting = false;
   String? _message;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prefillDistrictId != null) {
+      _districtId = widget.prefillDistrictId;
+    }
+    if (widget.prefillAddress != null) {
+      _addressController.text = widget.prefillAddress!;
+    }
+    if (widget.prefillHours != null) {
+      _hours = widget.prefillHours!;
+    }
+  }
 
   @override
   void dispose() {
@@ -135,7 +159,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                     child: Text(
                       _scheduledAt == null
                           ? 'Seleccionar fecha y hora'
-                          : 'Fecha: ${_formatDateTime(_scheduledAt!)}',
+                          : 'Fecha: ${formatDateTime(_scheduledAt!)}',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -226,11 +250,8 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
       return;
     }
 
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
-    );
-    if (time == null) {
+    final selectedMinute = await _pickSlotMinute();
+    if (selectedMinute == null || !mounted) {
       return;
     }
 
@@ -239,17 +260,37 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
         date.year,
         date.month,
         date.day,
-        time.hour,
-        time.minute,
+        selectedMinute ~/ 60,
+        selectedMinute % 60,
       );
     });
   }
 
-  /// Format DateTime to readable format: '13 Feb 2026, 14:30'
-  String _formatDateTime(DateTime dateTime) {
-    final local = dateTime.toLocal();
-    final months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return '${local.day} ${months[local.month - 1]} ${local.year}, ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  Future<int?> _pickSlotMinute() async {
+    final slots = <TimeOfDay>[];
+    for (int h = 6; h <= 21; h++) {
+      slots.add(TimeOfDay(hour: h, minute: 0));
+      if (h < 21) {
+        slots.add(TimeOfDay(hour: h, minute: 30));
+      }
+    }
+
+    return showDialog<int>(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text('Selecciona hora'),
+          children: slots.map((slot) {
+            final label =
+                '${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+            return SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, slot.hour * 60 + slot.minute),
+              child: Text(label, style: const TextStyle(fontSize: 16)),
+            );
+          }).toList(),
+        );
+      },
+    );
   }
 
   Future<void> _onQuotePressed() async {

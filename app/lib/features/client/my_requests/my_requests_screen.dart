@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/service_request_model.dart';
+import '../../../shared/utils/date_formatter.dart';
 import '../state/client_requests_providers.dart';
 
 class MyRequestsScreen extends ConsumerStatefulWidget {
@@ -65,7 +66,7 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
                   ),
                   title: Text(request.district?.name ?? 'Distrito ${request.districtId}'),
                   subtitle: Text(
-                    '${_formatDateTime(request.scheduledAt)} · \$${request.priceTotal.toStringAsFixed(2)}',
+                    '${formatDateTime(request.scheduledAt)} · \$${request.priceTotal.toStringAsFixed(2)}',
                   ),
                   trailing: _StatusChip(status: request.status),
                   onTap: () => context.push('/client/requests/${request.id}'),
@@ -90,12 +91,6 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
     );
   }
 
-  /// Format DateTime to readable format: '13 Feb 2026, 14:30'
-  String _formatDateTime(DateTime dateTime) {
-    final local = dateTime.toLocal();
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${local.day} ${months[local.month - 1]} ${local.year}, ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
-  }
 }
 
 class _StatusChip extends StatelessWidget {

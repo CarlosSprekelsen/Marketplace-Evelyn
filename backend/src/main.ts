@@ -59,8 +59,8 @@ async function bootstrap() {
   // Swagger documentation (disabled in production)
   if (!isProduction) {
     const config = new DocumentBuilder()
-      .setTitle('Marketplace API')
-      .setDescription('API de marketplace de limpieza por horas')
+      .setTitle('MarketPlace Evelyn API')
+      .setDescription('API de MarketPlace Evelyn - Limpieza por horas')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

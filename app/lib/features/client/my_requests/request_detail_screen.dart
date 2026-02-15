@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/provider_ratings_summary.dart';
 import '../../../shared/models/service_request_model.dart';
+import '../../../shared/utils/date_formatter.dart';
 import '../state/client_requests_providers.dart';
 
 class RequestDetailScreen extends ConsumerStatefulWidget {
@@ -89,7 +90,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
           _row('Distrito', request.district?.name ?? request.districtId),
           _row('Precio', request.priceTotal.toStringAsFixed(2)),
           _row('Direccion', request.addressDetail),
-          _row('Fecha (local)', request.scheduledAt.toLocal().toString()),
+          _row('Fecha', formatDateTime(request.scheduledAt)),
           if (request.status == ServiceRequestStatus.pending)
             _row('Tiempo restante', _formatRemaining(_remaining)),
           if (request.status == ServiceRequestStatus.cancelled && request.cancellationReason != null)
@@ -134,8 +135,16 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton(
-                    onPressed: () => context.go('/client/request/new'),
-                    child: const Text('Crear nueva solicitud'),
+                    onPressed: () {
+                      final params = {
+                        'district_id': request.districtId,
+                        'address': request.addressDetail,
+                        'hours': request.hoursRequested.toString(),
+                      };
+                      final uri = Uri(path: '/client/request/new', queryParameters: params);
+                      context.go(uri.toString());
+                    },
+                    child: const Text('Intentar de nuevo'),
                   ),
                 ],
               ),

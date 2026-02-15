@@ -45,7 +45,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/client/request/new',
-        builder: (context, state) => const RequestFormScreen(),
+        builder: (context, state) {
+          final qp = state.uri.queryParameters;
+          return RequestFormScreen(
+            prefillDistrictId: qp['district_id'],
+            prefillAddress: qp['address'],
+            prefillHours: int.tryParse(qp['hours'] ?? ''),
+          );
+        },
       ),
       GoRoute(
         path: '/client/requests',
