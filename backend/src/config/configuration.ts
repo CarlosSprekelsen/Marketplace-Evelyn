@@ -1,5 +1,6 @@
 export default () => ({
   port: parseInt(process.env.PORT || '3000', 10),
+  nodeEnv: process.env.NODE_ENV || 'development',
   database: {
     url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/marketplace',
   },
@@ -12,5 +13,8 @@ export default () => ({
     refreshSecret:
       process.env.JWT_REFRESH_SECRET || 'development-refresh-secret-change-in-production',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+  },
+  cors: {
+    origins: process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:8080',
   },
 });

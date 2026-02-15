@@ -254,6 +254,32 @@ describe('ServiceRequestsService', () => {
     expect(result.started_at).toBeInstanceOf(Date);
   });
 
+  it('rejects start when provider is not assigned', async () => {
+    const request = {
+      id: 'request-1',
+      provider_id: 'provider-2',
+      status: ServiceRequestStatus.ACCEPTED,
+    };
+    serviceRequestsRepository.findOne.mockResolvedValue(request);
+
+    await expect(service.startRequest('request-1', providerUser)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('rejects start when request is not ACCEPTED', async () => {
+    const request = {
+      id: 'request-1',
+      provider_id: 'provider-1',
+      status: ServiceRequestStatus.PENDING,
+    };
+    serviceRequestsRepository.findOne.mockResolvedValue(request);
+
+    await expect(service.startRequest('request-1', providerUser)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
   it('completes IN_PROGRESS request by assigned provider', async () => {
     const request = {
       id: 'request-1',
@@ -266,6 +292,32 @@ describe('ServiceRequestsService', () => {
 
     expect(result.status).toBe(ServiceRequestStatus.COMPLETED);
     expect(result.completed_at).toBeInstanceOf(Date);
+  });
+
+  it('rejects complete when provider is not assigned', async () => {
+    const request = {
+      id: 'request-1',
+      provider_id: 'provider-2',
+      status: ServiceRequestStatus.IN_PROGRESS,
+    };
+    serviceRequestsRepository.findOne.mockResolvedValue(request);
+
+    await expect(service.completeRequest('request-1', providerUser)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('rejects complete when request is not IN_PROGRESS', async () => {
+    const request = {
+      id: 'request-1',
+      provider_id: 'provider-1',
+      status: ServiceRequestStatus.ACCEPTED,
+    };
+    serviceRequestsRepository.findOne.mockResolvedValue(request);
+
+    await expect(service.completeRequest('request-1', providerUser)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('client can cancel PENDING request', async () => {
@@ -335,6 +387,22 @@ describe('ServiceRequestsService', () => {
     expect(result.cancelled_by_role).toBe(UserRole.ADMIN);
   });
 
+  it('rejects cancel on invalid terminal status', async () => {
+    const request = {
+      id: 'request-1',
+      status: ServiceRequestStatus.COMPLETED,
+      client_id: 'client-1',
+      provider_id: 'provider-1',
+    };
+    serviceRequestsRepository.findOne.mockResolvedValue(request);
+
+    await expect(
+      service.cancelRequest('request-1', clientUser, {
+        cancellation_reason: 'Too late',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('creates rating successfully for completed request', async () => {
     serviceRequestsRepository.findOne.mockResolvedValue({
       id: 'request-1',
@@ -371,6 +439,21 @@ describe('ServiceRequestsService', () => {
         stars: 5,
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects rating by non-owner client', async () => {
+    serviceRequestsRepository.findOne.mockResolvedValue({
+      id: 'request-1',
+      status: ServiceRequestStatus.COMPLETED,
+      client_id: 'another-client',
+      provider_id: 'provider-1',
+    });
+
+    await expect(
+      service.createRating('request-1', clientUser, {
+        stars: 5,
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('rejects rating twice on same request', async () => {

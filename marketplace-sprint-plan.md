@@ -618,7 +618,7 @@ npm run test -- --grep "concurrent accept"  # test de concurrencia pasa
 
 ---
 
-## Sprint 4 — Ejecución + Rating + Cancelación (2-3 días)
+## Sprint 4 [DONE]— Ejecución + Rating + Cancelación (2-3 días)
 
 **Objetivo:** Flujo completo: aceptar → iniciar → completar → calificar. Cancelación en cualquier punto válido.
 

@@ -54,6 +54,7 @@ app/lib/generated_plugin_registrant.dart
 /app/android/app/release
 *.jks
 *.keystore
+**/key.properties
 
 # iOS
 *.mode1v3
@@ -102,3 +103,5 @@ coverage/
 # Backup files
 *.bak
 *.backup
+infra/backups/
+infra/.env.production
