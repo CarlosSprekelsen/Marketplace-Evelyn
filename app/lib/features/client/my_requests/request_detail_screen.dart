@@ -19,7 +19,8 @@ class RequestDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<RequestDetailScreen> createState() => _RequestDetailScreenState();
 }
 
-class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
+class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen>
+    with WidgetsBindingObserver {
   ServiceRequestModel? _request;
   ProviderRatingsSummary? _providerRatings;
   String? _error;
@@ -33,19 +34,43 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   Duration _remaining = Duration.zero;
   int _selectedStars = 5;
   final TextEditingController _commentController = TextEditingController();
+  bool _isForeground = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadRequest();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _countdownTimer?.cancel();
     _pollingTimer?.cancel();
     _commentController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _isForeground = true;
+      final request = _request;
+      if (request != null) {
+        _setupTimersForStatus(request);
+      }
+      unawaited(_loadRequest());
+      return;
+    }
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _isForeground = false;
+      _countdownTimer?.cancel();
+      _pollingTimer?.cancel();
+    }
   }
 
   @override
@@ -348,7 +373,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     _countdownTimer?.cancel();
     _pollingTimer?.cancel();
 
-    if (request.status != ServiceRequestStatus.pending) {
+    if (!_isForeground || request.status != ServiceRequestStatus.pending) {
       _remaining = Duration.zero;
       return;
     }

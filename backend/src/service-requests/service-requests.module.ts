@@ -8,10 +8,12 @@ import { PricingModule } from '../pricing/pricing.module';
 import { ExpirationService } from './expiration.service';
 import { Rating } from '../ratings/rating.entity';
 import { ProvidersRatingsController } from './providers-ratings.controller';
+import { User } from '../users/user.entity';
+import { PushNotificationsService } from '../notifications/push-notifications.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ServiceRequest, District, Rating]), PricingModule],
-  providers: [ServiceRequestsService, ExpirationService],
+  imports: [TypeOrmModule.forFeature([ServiceRequest, District, Rating, User]), PricingModule],
+  providers: [ServiceRequestsService, ExpirationService, PushNotificationsService],
   controllers: [ServiceRequestsController, ProvidersRatingsController],
   exports: [ServiceRequestsService],
 })

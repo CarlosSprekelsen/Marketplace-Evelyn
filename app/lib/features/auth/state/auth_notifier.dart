@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/api/dio_client.dart';
 import '../../../core/api/interceptors/auth_interceptor.dart';
+import '../../../core/notifications/push_notifications_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../shared/models/district.dart';
 import '../../../shared/models/user.dart';
@@ -44,6 +45,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
+final pushNotificationsServiceProvider = Provider<PushNotificationsService>((ref) {
+  final service = PushNotificationsService(ref.read(authRepositoryProvider));
+  ref.onDispose(service.dispose);
+  return service;
+});
+
 final districtsProvider = FutureProvider<List<District>>((ref) async {
   final repository = ref.read(authRepositoryProvider);
   return repository.getDistricts();
@@ -54,6 +61,7 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref
     repository: ref.read(authRepositoryProvider),
     tokenStorage: ref.read(tokenStorageProvider),
     eventBus: ref.read(authEventBusProvider),
+    pushNotificationsService: ref.read(pushNotificationsServiceProvider),
   );
 });
 
@@ -62,9 +70,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required AuthRepository repository,
     required TokenStorage tokenStorage,
     required AuthEventBus eventBus,
+    required PushNotificationsService pushNotificationsService,
   })  : _repository = repository,
         _tokenStorage = tokenStorage,
         _eventBus = eventBus,
+        _pushNotificationsService = pushNotificationsService,
         super(AuthState.loading) {
     _eventSub = _eventBus.stream.listen((event) async {
       if (event == AuthEvent.sessionExpired) {
@@ -81,6 +91,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
   final TokenStorage _tokenStorage;
   final AuthEventBus _eventBus;
+  final PushNotificationsService _pushNotificationsService;
   StreamSubscription<AuthEvent>? _eventSub;
 
   Future<void> _initialize() async {
@@ -97,6 +108,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           status: AuthStatus.authenticated,
           user: user,
         );
+        unawaited(_pushNotificationsService.syncTokenForCurrentUser());
         return;
       } catch (_) {
         await _repository.refresh();
@@ -105,6 +117,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           status: AuthStatus.authenticated,
           user: user,
         );
+        unawaited(_pushNotificationsService.syncTokenForCurrentUser());
       }
     } catch (_) {
       await _tokenStorage.clearTokens();
@@ -126,6 +139,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         user: auth.user,
       );
+      unawaited(_pushNotificationsService.syncTokenForCurrentUser());
     } catch (error) {
       state = AuthState(
         status: AuthStatus.error,
@@ -156,6 +170,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         user: auth.user,
       );
+      unawaited(_pushNotificationsService.syncTokenForCurrentUser());
     } catch (error) {
       state = AuthState(
         status: AuthStatus.error,
@@ -165,6 +180,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    await _pushNotificationsService.clearToken();
     await _repository.logout();
     state = AuthState.unauthenticated;
   }
@@ -173,6 +189,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repository.getProfile();
       state = AuthState(status: AuthStatus.authenticated, user: user);
+      unawaited(_pushNotificationsService.syncTokenForCurrentUser());
     } catch (_) {
       // Keep current state if profile refresh fails
     }

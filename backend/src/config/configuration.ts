@@ -17,4 +17,7 @@ export default () => ({
   cors: {
     origins: process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:8080',
   },
+  fcm: {
+    serverKey: process.env.FCM_SERVER_KEY || '',
+  },
 });

@@ -15,26 +15,36 @@ class MyRequestsScreen extends ConsumerStatefulWidget {
   ConsumerState<MyRequestsScreen> createState() => _MyRequestsScreenState();
 }
 
-class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
-  late Timer _pollTimer;
+class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> with WidgetsBindingObserver {
+  Timer? _pollTimer;
   String? _statusFilter;
 
   @override
   void initState() {
     super.initState();
-    _pollTimer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) {
-        // ignore: unused_result
-        ref.refresh(myRequestsProvider);
-      },
-    );
+    WidgetsBinding.instance.addObserver(this);
+    _startPolling();
   }
 
   @override
   void dispose() {
-    _pollTimer.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _stopPolling();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startPolling(forceRefresh: true);
+      return;
+    }
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _stopPolling();
+    }
   }
 
   @override
@@ -135,6 +145,28 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
         });
       },
     );
+  }
+
+  void _startPolling({bool forceRefresh = false}) {
+    if (forceRefresh) {
+      // ignore: unused_result
+      ref.refresh(myRequestsProvider);
+    }
+    if (_pollTimer?.isActive ?? false) {
+      return;
+    }
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) {
+        // ignore: unused_result
+        ref.refresh(myRequestsProvider);
+      },
+    );
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 }
 

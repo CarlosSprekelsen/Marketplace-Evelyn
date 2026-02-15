@@ -8,6 +8,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/state/auth_notifier.dart';
 import '../../features/auth/state/auth_state.dart';
+import '../../features/admin/presentation/admin_home_screen.dart';
 import '../../features/client/my_requests/my_requests_screen.dart';
 import '../../features/client/my_requests/request_detail_screen.dart';
 import '../../features/client/presentation/client_home_screen.dart';
@@ -15,6 +16,7 @@ import '../../features/client/request_form/request_form_screen.dart';
 import '../../features/provider/available_jobs/available_jobs_screen.dart';
 import '../../features/provider/my_jobs/my_jobs_screen.dart';
 import '../../features/provider/presentation/provider_home_screen.dart';
+import '../../features/legal/presentation/legal_document_screen.dart';
 import '../../shared/models/user.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -38,6 +40,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/legal/terms',
+        builder: (context, state) => const LegalDocumentScreen(
+          title: 'Términos y Condiciones',
+          content:
+              'Al crear una cuenta aceptas usar MarketPlace Evelyn de forma responsable. '
+              'Debes proveer datos reales, respetar a otros usuarios y cumplir las normas locales. '
+              'La plataforma puede suspender cuentas por fraude, abuso o incumplimiento operativo.',
+        ),
+      ),
+      GoRoute(
+        path: '/legal/privacy',
+        builder: (context, state) => const LegalDocumentScreen(
+          title: 'Política de Privacidad',
+          content:
+              'Tus datos se usan para operar el servicio de limpieza: autenticación, asignación '
+              'de solicitudes, comunicación y soporte. No compartimos información sensible fuera '
+              'de los casos necesarios para prestar el servicio o cumplir obligaciones legales.',
+        ),
       ),
       GoRoute(
         path: '/client/home',
@@ -69,6 +91,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProviderHomeScreen(),
       ),
       GoRoute(
+        path: '/admin/home',
+        builder: (context, state) => const AdminHomeScreen(),
+      ),
+      GoRoute(
         path: '/provider/jobs/available',
         builder: (context, state) => const AvailableJobsScreen(),
       ),
@@ -81,13 +107,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authNotifierProvider);
       final location = state.matchedLocation;
       final isAuthRoute = location == '/login' || location == '/register';
+      final isLegalRoute = location.startsWith('/legal/');
 
       if (authState.status == AuthStatus.loading) {
         return location == '/splash' ? null : '/splash';
       }
 
       if (authState.status == AuthStatus.unauthenticated || authState.status == AuthStatus.error) {
-        return isAuthRoute ? null : '/login';
+        return isAuthRoute || isLegalRoute ? null : '/login';
       }
 
       if (authState.status == AuthStatus.authenticated) {
@@ -103,8 +130,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (user.role == UserRole.client && location.startsWith('/provider')) {
           return '/client/home';
         }
+        if (user.role == UserRole.client && location.startsWith('/admin')) {
+          return '/client/home';
+        }
         if (user.role == UserRole.provider && location.startsWith('/client')) {
           return '/provider/home';
+        }
+        if (user.role == UserRole.provider && location.startsWith('/admin')) {
+          return '/provider/home';
+        }
+        if (user.role == UserRole.admin &&
+            (location.startsWith('/client') || location.startsWith('/provider'))) {
+          return '/admin/home';
         }
       }
 
@@ -116,6 +153,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 String _homeByRole(UserRole role) {
   if (role == UserRole.provider) {
     return '/provider/home';
+  }
+  if (role == UserRole.admin) {
+    return '/admin/home';
   }
   return '/client/home';
 }

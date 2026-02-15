@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Put,
+  Delete,
   Body,
   UseGuards,
   Request,
@@ -16,6 +17,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { SetAvailabilityDto } from './dto/set-availability.dto';
+import { SetFcmTokenDto } from './dto/set-fcm-token.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtRefreshAuthGuard } from './jwt-refresh-auth.guard';
 import { Roles } from './roles.decorator';
@@ -90,6 +92,28 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Availability updated' })
   async setAvailability(@Request() req, @Body() dto: SetAvailabilityDto) {
     const user = await this.usersService.setAvailability(req.user.id, dto.is_available);
+    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    return safeUser;
+  }
+
+  @Put('fcm-token')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Register/refresh device FCM token for push notifications' })
+  @ApiResponse({ status: 200, description: 'FCM token updated' })
+  async setFcmToken(@Request() req, @Body() dto: SetFcmTokenDto) {
+    const user = await this.usersService.setFcmToken(req.user.id, dto.fcm_token);
+    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    return safeUser;
+  }
+
+  @Delete('fcm-token')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Remove device FCM token for push notifications' })
+  @ApiResponse({ status: 200, description: 'FCM token cleared' })
+  async clearFcmToken(@Request() req) {
+    const user = await this.usersService.setFcmToken(req.user.id, null);
     const { password_hash, refresh_token_hash, ...safeUser } = user;
     return safeUser;
   }

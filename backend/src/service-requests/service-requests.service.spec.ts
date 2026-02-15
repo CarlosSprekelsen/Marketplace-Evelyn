@@ -13,6 +13,10 @@ describe('ServiceRequestsService', () => {
     createQueryBuilder: jest.Mock;
   };
   let districtsRepository: { findOne: jest.Mock };
+  let usersRepository: {
+    find: jest.Mock;
+    findOne: jest.Mock;
+  };
   let ratingsRepository: {
     findOne: jest.Mock;
     create: jest.Mock;
@@ -20,6 +24,7 @@ describe('ServiceRequestsService', () => {
     find: jest.Mock;
   };
   let pricingService: { getQuote: jest.Mock };
+  let pushNotificationsService: { sendToTokens: jest.Mock };
 
   const clientUser = {
     id: 'client-1',
@@ -50,6 +55,10 @@ describe('ServiceRequestsService', () => {
     districtsRepository = {
       findOne: jest.fn(),
     };
+    usersRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn(),
+    };
     ratingsRepository = {
       findOne: jest.fn(),
       create: jest.fn((input) => input),
@@ -59,12 +68,17 @@ describe('ServiceRequestsService', () => {
     pricingService = {
       getQuote: jest.fn(),
     };
+    pushNotificationsService = {
+      sendToTokens: jest.fn(),
+    };
 
     service = new ServiceRequestsService(
       serviceRequestsRepository as any,
       districtsRepository as any,
+      usersRepository as any,
       ratingsRepository as any,
       pricingService as any,
+      pushNotificationsService as any,
     );
   });
 
@@ -486,5 +500,26 @@ describe('ServiceRequestsService', () => {
     expect(result.total_ratings).toBe(2);
     expect(result.average_stars).toBe(4);
     expect(result.provider_id).toBe('provider-1');
+  });
+
+  it('admin can update request status manually', async () => {
+    serviceRequestsRepository.findOne.mockResolvedValue({
+      id: 'request-1',
+      status: ServiceRequestStatus.PENDING,
+      accepted_at: null,
+      started_at: null,
+      completed_at: null,
+    });
+    serviceRequestsRepository.save.mockImplementation(async (item) => item);
+
+    const result = await service.adminUpdateStatus(
+      'request-1',
+      ServiceRequestStatus.CANCELLED,
+      'Admin override',
+    );
+
+    expect(result.status).toBe(ServiceRequestStatus.CANCELLED);
+    expect(result.cancellation_reason).toBe('Admin override');
+    expect(result.cancelled_by_role).toBe(UserRole.ADMIN);
   });
 });

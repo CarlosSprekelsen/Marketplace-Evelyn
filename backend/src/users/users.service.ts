@@ -1,7 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -93,5 +93,40 @@ export class UsersService {
     }
 
     return bcrypt.compare(refreshToken, user.refresh_token_hash);
+  }
+
+  async setFcmToken(userId: string, fcmToken: string | null): Promise<User> {
+    await this.usersRepository.update(userId, { fcm_token: fcmToken });
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found after FCM token update');
+    }
+    return user;
+  }
+
+  async listUsers(role?: UserRole): Promise<User[]> {
+    return this.usersRepository.find({
+      where: role ? { role } : undefined,
+      relations: ['district'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
+  async setVerified(userId: string, isVerified: boolean): Promise<User> {
+    await this.usersRepository.update(userId, { is_verified: isVerified });
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found after verification update');
+    }
+    return user;
+  }
+
+  async setBlocked(userId: string, isBlocked: boolean): Promise<User> {
+    await this.usersRepository.update(userId, { is_blocked: isBlocked });
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found after block update');
+    }
+    return user;
   }
 }

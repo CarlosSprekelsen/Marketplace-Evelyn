@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { DistrictsModule } from './districts/districts.module';
 import { PricingModule } from './pricing/pricing.module';
 import { ServiceRequestsModule } from './service-requests/service-requests.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ServiceRequestsModule } from './service-requests/service-requests.modul
     DistrictsModule,
     PricingModule,
     ServiceRequestsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

@@ -98,6 +98,17 @@ class AuthRepository {
     return User.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<void> setFcmToken(String token) async {
+    await _dio.put(
+      '/auth/fcm-token',
+      data: {'fcm_token': token},
+    );
+  }
+
+  Future<void> clearFcmToken() async {
+    await _dio.delete('/auth/fcm-token');
+  }
+
   Future<List<District>> getDistricts() async {
     final response = await _dio.get('/districts');
     final data = response.data;

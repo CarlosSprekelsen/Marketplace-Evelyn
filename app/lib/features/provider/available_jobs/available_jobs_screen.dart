@@ -16,7 +16,8 @@ class AvailableJobsScreen extends ConsumerStatefulWidget {
   ConsumerState<AvailableJobsScreen> createState() => _AvailableJobsScreenState();
 }
 
-class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen> {
+class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen>
+    with WidgetsBindingObserver {
   final List<ProviderAvailableJob> _jobs = [];
   Timer? _pollingTimer;
   Timer? _tickerTimer;
@@ -24,23 +25,40 @@ class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen> {
   String? _error;
   String? _acceptingJobId;
   int _pollSeconds = 10;
+  bool _isForeground = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadJobs();
-    _tickerTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
+    _startTicker();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pollingTimer?.cancel();
-    _tickerTimer?.cancel();
+    _stopTicker();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _isForeground = true;
+      _startTicker();
+      _loadJobs(isManualRefresh: true);
+      return;
+    }
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _isForeground = false;
+      _pollingTimer?.cancel();
+      _stopTicker();
+    }
   }
 
   @override
@@ -168,6 +186,9 @@ class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen> {
   }
 
   void _scheduleNextPoll() {
+    if (!_isForeground) {
+      return;
+    }
     _pollingTimer?.cancel();
     _pollingTimer = Timer(Duration(seconds: _pollSeconds), () {
       _loadJobs();
@@ -219,5 +240,21 @@ class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen> {
     final minutes = (safeSeconds ~/ 60).toString().padLeft(2, '0');
     final remSeconds = (safeSeconds % 60).toString().padLeft(2, '0');
     return '$minutes:$remSeconds';
+  }
+
+  void _startTicker() {
+    if (_tickerTimer?.isActive ?? false) {
+      return;
+    }
+    _tickerTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _stopTicker() {
+    _tickerTimer?.cancel();
+    _tickerTimer = null;
   }
 }

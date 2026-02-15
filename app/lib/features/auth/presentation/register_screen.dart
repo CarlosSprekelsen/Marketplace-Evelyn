@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../config/environment.dart';
 import '../../../shared/models/user.dart';
 import '../state/auth_notifier.dart';
 
@@ -14,6 +13,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  static final RegExp _uaePhoneRegex = RegExp(r'^\+971\d{9}$');
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -21,6 +22,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   UserRole _selectedRole = UserRole.client;
   String? _selectedDistrictId;
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -105,11 +107,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Telefono',
                       border: OutlineInputBorder(),
+                      hintText: '+971501234567',
                     ),
                     keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Ingresa tu telefono';
+                      }
+                      if (!_uaePhoneRegex.hasMatch(value.trim())) {
+                        return 'Formato inválido. Usa +971XXXXXXXXX';
                       }
                       return null;
                     },
@@ -145,7 +151,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                       _selectedDistrictId ??= districts.first.id;
                       return DropdownButtonFormField<String>(
-                        value: _selectedDistrictId,
+                        initialValue: _selectedDistrictId,
                         decoration: const InputDecoration(
                           labelText: 'Distrito',
                           border: OutlineInputBorder(),
@@ -177,13 +183,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: CircularProgressIndicator(),
                       ),
                     ),
-                    error: (error, _) => Column(
+                    error: (_, __) => Column(
                       children: [
-                        Text(
-                          'No se pudo cargar distritos. Verifica backend y red.\n'
-                          'URL: ${Environment.apiBaseUrl}\n'
-                          'Error: $error',
-                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        const Text(
+                          'No se pudo cargar distritos. Verifica backend y red.',
+                          style: TextStyle(color: Colors.red),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton(
@@ -194,6 +198,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _acceptedTerms,
+                    onChanged: authState.isLoading
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _acceptedTerms = value ?? false;
+                            });
+                          },
+                    title: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Text('Acepto los '),
+                        TextButton(
+                          onPressed: () => context.push('/legal/terms'),
+                          child: const Text('Términos'),
+                        ),
+                        const Text(' y la '),
+                        TextButton(
+                          onPressed: () => context.push('/legal/privacy'),
+                          child: const Text('Política de Privacidad'),
+                        ),
+                      ],
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const SizedBox(height: 4),
                   if (authState.message != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -203,7 +235,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ),
                   FilledButton(
-                    onPressed: authState.isLoading
+                    onPressed: authState.isLoading || !_acceptedTerms
                         ? null
                         : () async {
                             if (!_formKey.currentState!.validate()) {

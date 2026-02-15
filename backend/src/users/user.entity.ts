@@ -89,6 +89,14 @@ export class User {
   @Column({ type: 'boolean', default: true })
   is_available: boolean;
 
+  @ApiProperty({
+    description: 'Firebase Cloud Messaging token for push notifications',
+    example: 'fcm-token-example',
+    required: false,
+  })
+  @Column({ type: 'varchar', nullable: true })
+  fcm_token: string | null;
+
   @Column({ type: 'varchar', nullable: true })
   refresh_token_hash: string;
 

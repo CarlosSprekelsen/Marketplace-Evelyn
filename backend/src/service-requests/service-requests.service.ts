@@ -3,10 +3,11 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { ServiceRequest, ServiceRequestStatus } from './service-request.entity';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { PricingService } from '../pricing/pricing.service';
@@ -15,17 +16,23 @@ import { User, UserRole } from '../users/user.entity';
 import { Rating } from '../ratings/rating.entity';
 import { CancelServiceRequestDto } from './dto/cancel-service-request.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { PushNotificationsService } from '../notifications/push-notifications.service';
 
 @Injectable()
 export class ServiceRequestsService {
+  private readonly logger = new Logger(ServiceRequestsService.name);
+
   constructor(
     @InjectRepository(ServiceRequest)
     private readonly serviceRequestsRepository: Repository<ServiceRequest>,
     @InjectRepository(District)
     private readonly districtsRepository: Repository<District>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     @InjectRepository(Rating)
     private readonly ratingsRepository: Repository<Rating>,
     private readonly pricingService: PricingService,
+    private readonly pushNotificationsService: PushNotificationsService,
   ) {}
 
   async create(client: User, dto: CreateServiceRequestDto) {
@@ -60,10 +67,12 @@ export class ServiceRequestsService {
     });
 
     const saved = await this.serviceRequestsRepository.save(request);
-    return this.serviceRequestsRepository.findOne({
+    const created = await this.serviceRequestsRepository.findOne({
       where: { id: saved.id },
       relations: ['district', 'provider'],
     });
+    await this.notifyProvidersForNewRequest(saved);
+    return created;
   }
 
   async findAvailableForProvider(provider: User) {
@@ -155,6 +164,7 @@ export class ServiceRequestsService {
       throw new NotFoundException('Accepted service request not found');
     }
 
+    await this.notifyClientRequestAccepted(accepted);
     return accepted;
   }
 
@@ -331,6 +341,47 @@ export class ServiceRequestsService {
     });
   }
 
+  async findAllForAdmin() {
+    return this.serviceRequestsRepository.find({
+      relations: ['district', 'provider', 'client'],
+      order: { created_at: 'DESC' },
+      take: 200,
+    });
+  }
+
+  async adminUpdateStatus(
+    requestId: string,
+    status: ServiceRequestStatus,
+    cancellationReason?: string,
+  ) {
+    const request = await this.serviceRequestsRepository.findOne({
+      where: { id: requestId },
+      relations: ['district', 'provider', 'client'],
+    });
+
+    if (!request) {
+      throw new NotFoundException('Service request not found');
+    }
+
+    request.status = status;
+    if (status === ServiceRequestStatus.ACCEPTED && !request.accepted_at) {
+      request.accepted_at = new Date();
+    }
+    if (status === ServiceRequestStatus.IN_PROGRESS && !request.started_at) {
+      request.started_at = new Date();
+    }
+    if (status === ServiceRequestStatus.COMPLETED && !request.completed_at) {
+      request.completed_at = new Date();
+    }
+    if (status === ServiceRequestStatus.CANCELLED) {
+      request.cancelled_at = new Date();
+      request.cancelled_by_role = UserRole.ADMIN;
+      request.cancellation_reason = cancellationReason ?? 'Admin status update';
+    }
+
+    return this.serviceRequestsRepository.save(request);
+  }
+
   async findByIdForUser(id: string, user: User) {
     const request = await this.serviceRequestsRepository.findOne({
       where: { id },
@@ -405,6 +456,64 @@ export class ServiceRequestsService {
     }
 
     return { allowed: false, reason: 'invalid_status' };
+  }
+
+  private async notifyProvidersForNewRequest(request: ServiceRequest): Promise<void> {
+    try {
+      const providers = await this.usersRepository.find({
+        where: {
+          role: UserRole.PROVIDER,
+          district_id: request.district_id,
+          is_verified: true,
+          is_blocked: false,
+          is_available: true,
+          fcm_token: Not(IsNull()),
+        },
+        select: ['id', 'fcm_token'],
+      });
+
+      await this.pushNotificationsService.sendToTokens(
+        providers.map((provider) => provider.fcm_token),
+        {
+          title: 'Nueva solicitud disponible',
+          body: `Hay una nueva solicitud en tu distrito por ${request.hours_requested} hora(s).`,
+          data: {
+            type: 'NEW_SERVICE_REQUEST',
+            request_id: request.id,
+            district_id: request.district_id,
+          },
+        },
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to notify providers for new request ${request.id}: ${String(error)}`,
+      );
+    }
+  }
+
+  private async notifyClientRequestAccepted(request: ServiceRequest): Promise<void> {
+    try {
+      const client = await this.usersRepository.findOne({
+        where: { id: request.client_id },
+        select: ['id', 'fcm_token'],
+      });
+      if (!client?.fcm_token) {
+        return;
+      }
+
+      await this.pushNotificationsService.sendToTokens([client.fcm_token], {
+        title: 'Tu solicitud fue aceptada',
+        body: 'Un proveedor aceptó tu solicitud. Revisa los detalles del servicio.',
+        data: {
+          type: 'REQUEST_ACCEPTED',
+          request_id: request.id,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to notify client for accepted request ${request.id}: ${String(error)}`,
+      );
+    }
   }
 
   private toNumber(value: number | string): number {
