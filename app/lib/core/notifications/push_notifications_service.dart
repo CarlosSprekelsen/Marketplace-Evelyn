@@ -7,11 +7,23 @@ import 'package:flutter/foundation.dart';
 
 import '../../features/auth/auth_repository.dart';
 
+/// Top-level handler required for background messages.
+/// Must be a top-level function (not a class method).
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Ensure Firebase is initialized in the background isolate.
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp();
+  }
+  debugPrint('FCM background message: ${message.messageId}');
+}
+
 class PushNotificationsService {
   PushNotificationsService(this._authRepository);
 
   final AuthRepository _authRepository;
   StreamSubscription<String>? _tokenRefreshSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
   String? _lastRegisteredToken;
 
   bool get _isSupportedPlatform => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
@@ -46,9 +58,40 @@ class PushNotificationsService {
           debugPrint('FCM token refresh sync failed: $error');
         }
       });
+
+      // Register background message handler (idempotent — safe to call multiple times).
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Listen for foreground messages so the app can react while open.
+      _foregroundMessageSubscription ??=
+          FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+
+      // Handle notification taps that open the app from background/terminated state.
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
+      // Check if the app was opened from a terminated state via a notification.
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleNotificationTap(initialMessage);
+      }
     } catch (error) {
       debugPrint('Push notifications setup skipped: $error');
     }
+  }
+
+  void _handleForegroundMessage(RemoteMessage message) {
+    final notification = message.notification;
+    if (notification == null) {
+      return;
+    }
+    // Log the foreground notification. In a production app you would show
+    // a local notification via flutter_local_notifications here.
+    debugPrint('FCM foreground: ${notification.title} — ${notification.body}');
+  }
+
+  void _handleNotificationTap(RemoteMessage message) {
+    // Future: navigate to the relevant screen based on message.data.
+    debugPrint('FCM tap: ${message.data}');
   }
 
   Future<void> clearToken() async {
@@ -67,5 +110,6 @@ class PushNotificationsService {
 
   void dispose() {
     _tokenRefreshSubscription?.cancel();
+    _foregroundMessageSubscription?.cancel();
   }
 }

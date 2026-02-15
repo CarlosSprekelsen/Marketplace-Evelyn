@@ -32,6 +32,7 @@ export class UsersService {
     phone: string;
     role: string;
     district_id: string;
+    terms_accepted_at?: Date;
   }): Promise<User> {
     // Check if email already exists
     const existingUser = await this.findByEmail(userData.email);
@@ -50,6 +51,7 @@ export class UsersService {
       phone: userData.phone,
       role: userData.role as any,
       district_id: userData.district_id,
+      terms_accepted_at: userData.terms_accepted_at ?? null,
     });
 
     const saved = await this.usersRepository.save(user);

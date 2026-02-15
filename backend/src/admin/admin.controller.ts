@@ -65,7 +65,7 @@ export class AdminController {
     );
   }
 
-  private sanitizeUser(user: Record<string, unknown>) {
+  private sanitizeUser(user: Record<string, any>) {
     const { password_hash, refresh_token_hash, ...safeUser } = user;
     return safeUser;
   }

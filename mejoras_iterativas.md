@@ -4,7 +4,7 @@ Estado actual: Sprints 0-4 completados. Flujo cliente funcional (registro + book
 
 ---
 
-## Wave 1 — Correcciones de testing inmediatas (1-2 días)
+## Wave 1 [COMLPLETADA]— Correcciones de testing inmediatas (1-2 días)
 
 Estas salen directamente de tu sesión de pruebas. Son cambios quirúrgicos que no tocan arquitectura.
 
@@ -40,7 +40,7 @@ Estas salen directamente de tu sesión de pruebas. Son cambios quirúrgicos que 
 
 ---
 
-## Wave 2 — Mejoras de UX detectadas en codebase (3-5 días)
+## Wave 2 [COMPLETADA]— Mejoras de UX detectadas en codebase (3-5 días)
 
 Cosas que no aparecieron en tu testing pero que se ven al revisar el código y que afectarán la validación real.
 
@@ -72,7 +72,7 @@ Cosas que no aparecieron en tu testing pero que se ven al revisar el código y q
 
 ---
 
-## Wave 3 — Preparación para beta real (5-7 días)
+## Wave 3 [COMPLETADA]— Preparación para beta real (5-7 días)
 
 Estas son necesarias antes de poner usuarios reales.
 

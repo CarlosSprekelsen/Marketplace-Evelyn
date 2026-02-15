@@ -81,6 +81,7 @@ describe('AuthService', () => {
       phone: baseUser.phone,
       role: UserRole.CLIENT,
       district_id: baseUser.district_id,
+      accepted_terms: true,
     });
 
     expect(result).toEqual({
@@ -174,6 +175,23 @@ describe('AuthService', () => {
         phone: baseUser.phone,
         role: UserRole.CLIENT,
         district_id: 'missing-district',
+        accepted_terms: true,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('register with terms not accepted: rejected', async () => {
+    districtsRepository.findOne.mockResolvedValue({ id: 'district-1', is_active: true });
+
+    await expect(
+      authService.register({
+        email: baseUser.email,
+        password: '123456',
+        full_name: baseUser.full_name,
+        phone: baseUser.phone,
+        role: UserRole.CLIENT,
+        district_id: baseUser.district_id,
+        accepted_terms: false,
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });

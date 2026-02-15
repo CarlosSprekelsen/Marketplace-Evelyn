@@ -155,6 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String phone,
     required UserRole role,
     required String districtId,
+    bool acceptedTerms = true,
   }) async {
     state = AuthState.loading;
     try {
@@ -165,6 +166,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         phone: phone,
         role: role,
         districtId: districtId,
+        acceptedTerms: acceptedTerms,
       );
       state = AuthState(
         status: AuthStatus.authenticated,

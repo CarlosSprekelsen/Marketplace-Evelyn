@@ -97,6 +97,14 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   fcm_token: string | null;
 
+  @ApiProperty({
+    description: 'Timestamp when user accepted terms and conditions',
+    example: '2026-02-13T10:00:00.000Z',
+    required: false,
+  })
+  @Column({ type: 'timestamp', nullable: true })
+  terms_accepted_at: Date | null;
+
   @Column({ type: 'varchar', nullable: true })
   refresh_token_hash: string;
 

@@ -39,6 +39,7 @@ class ServiceRequestModel {
     this.completedAt,
     this.cancelledAt,
     this.cancellationReason,
+    this.client,
     this.provider,
     this.district,
   });
@@ -60,6 +61,7 @@ class ServiceRequestModel {
   final DateTime? completedAt;
   final DateTime? cancelledAt;
   final String? cancellationReason;
+  final User? client;
   final User? provider;
   final District? district;
 
@@ -82,6 +84,7 @@ class ServiceRequestModel {
       completedAt: _parseDateTime(json['completed_at']),
       cancelledAt: _parseDateTime(json['cancelled_at']),
       cancellationReason: json['cancellation_reason'] as String?,
+      client: json['client'] != null ? User.fromJson(json['client'] as Map<String, dynamic>) : null,
       provider: json['provider'] != null ? User.fromJson(json['provider'] as Map<String, dynamic>) : null,
       district:
           json['district'] != null ? District.fromJson(json['district'] as Map<String, dynamic>) : null,

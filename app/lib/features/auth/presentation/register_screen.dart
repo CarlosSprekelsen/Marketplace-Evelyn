@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../config/environment.dart';
 import '../../../shared/models/user.dart';
 import '../state/auth_notifier.dart';
 
@@ -183,11 +184,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: CircularProgressIndicator(),
                       ),
                     ),
-                    error: (_, __) => Column(
+                    error: (error, _) => Column(
                       children: [
-                        const Text(
-                          'No se pudo cargar distritos. Verifica backend y red.',
-                          style: TextStyle(color: Colors.red),
+                        Text(
+                          'No se pudo cargar distritos. Verifica backend y red.\n'
+                          'URL: ${Environment.apiBaseUrl}\n'
+                          'Error: $error',
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton(
@@ -254,6 +257,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               phone: _phoneController.text.trim(),
                               role: _selectedRole,
                               districtId: districtId,
+                              acceptedTerms: _acceptedTerms,
                             );
                           },
                     child: authState.isLoading

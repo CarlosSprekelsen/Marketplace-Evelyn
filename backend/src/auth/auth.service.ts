@@ -37,6 +37,10 @@ export class AuthService {
       throw new BadRequestException('District is not active');
     }
 
+    if (!registerDto.accepted_terms) {
+      throw new BadRequestException('You must accept terms and conditions');
+    }
+
     // Create user
     const user = await this.usersService.create({
       email: registerDto.email,
@@ -45,6 +49,7 @@ export class AuthService {
       phone: registerDto.phone,
       role: registerDto.role,
       district_id: registerDto.district_id,
+      terms_accepted_at: new Date(),
     });
 
     // Generate tokens

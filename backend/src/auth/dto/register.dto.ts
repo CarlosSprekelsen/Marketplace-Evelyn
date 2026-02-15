@@ -7,6 +7,7 @@ import {
   IsEnum,
   IsUUID,
   IsIn,
+  IsBoolean,
   Matches,
 } from 'class-validator';
 import { UserRole } from '../../users/user.entity';
@@ -44,4 +45,8 @@ export class RegisterDto {
   @IsUUID()
   @IsNotEmpty()
   district_id: string;
+
+  @ApiProperty({ example: true, description: 'User accepted terms and conditions' })
+  @IsBoolean()
+  accepted_terms: boolean;
 }

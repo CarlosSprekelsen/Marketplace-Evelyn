@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/service_request_model.dart';
 import '../../../shared/utils/date_formatter.dart';
+import '../../../shared/utils/phone_actions.dart';
 import '../state/provider_jobs_providers.dart';
 
 class MyJobsScreen extends ConsumerStatefulWidget {
@@ -92,6 +93,16 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                               Text('Fecha: ${formatDateTime(job.scheduledAt)}'),
                               Text('Precio: ${job.priceTotal.toStringAsFixed(2)}'),
                               Text('Horas: ${job.hoursRequested}'),
+                              if (job.client != null) ...[
+                                const SizedBox(height: 4),
+                                Text('Cliente: ${job.client!.fullName}'),
+                                Row(
+                                  children: [
+                                    Text('Tel: ${job.client!.phone}'),
+                                    PhoneActionButtons(phone: job.client!.phone),
+                                  ],
+                                ),
+                              ],
                               if (job.status == ServiceRequestStatus.accepted) ...[
                                 const SizedBox(height: 12),
                                 Row(

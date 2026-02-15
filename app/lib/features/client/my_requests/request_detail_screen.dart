@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/models/provider_ratings_summary.dart';
 import '../../../shared/models/service_request_model.dart';
 import '../../../shared/utils/date_formatter.dart';
+import '../../../shared/utils/phone_actions.dart';
 import '../state/client_requests_providers.dart';
 
 class RequestDetailScreen extends ConsumerStatefulWidget {
@@ -128,6 +129,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen>
             ),
             _row('Nombre', request.provider?.fullName ?? request.providerId!),
             if (request.provider != null) _row('Telefono', request.provider!.phone),
+            if (request.provider != null) PhoneActionButtons(phone: request.provider!.phone),
             _buildProviderRatingSummary(),
           ],
           if (_canCancel(request.status)) ...[

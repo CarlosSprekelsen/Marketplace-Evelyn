@@ -22,6 +22,7 @@ class AuthRepository {
     required String phone,
     required UserRole role,
     required String districtId,
+    bool acceptedTerms = true,
   }) async {
     final response = await _dio.post(
       '/auth/register',
@@ -32,6 +33,7 @@ class AuthRepository {
         'phone': phone,
         'role': role.value,
         'district_id': districtId,
+        'accepted_terms': acceptedTerms,
       },
     );
 

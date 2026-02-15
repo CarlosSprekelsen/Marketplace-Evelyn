@@ -24,6 +24,9 @@ dependencies:
   firebase_core: ^3.8.1
   firebase_messaging: ^15.1.5
 
+  # URL launcher (calls, WhatsApp)
+  url_launcher: ^6.2.5
+
   # Routing
   go_router: ^14.0.2
 
