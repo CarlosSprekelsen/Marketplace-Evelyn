@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../shared/models/price_quote.dart';
 import '../../shared/models/provider_ratings_summary.dart';
+import '../../shared/models/recurring_request.dart';
 import '../../shared/models/service_request_model.dart';
 
 class ClientRequestsRepository {
@@ -87,5 +88,39 @@ class ClientRequestsRepository {
   Future<ProviderRatingsSummary> getProviderRatings(String providerId) async {
     final response = await _dio.get('/providers/$providerId/ratings');
     return ProviderRatingsSummary.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  // --- Recurring requests ---
+
+  Future<RecurringRequest> createRecurringRequest({
+    required String districtId,
+    required String addressDetail,
+    required int hoursRequested,
+    required int dayOfWeek,
+    required String timeOfDay,
+  }) async {
+    final response = await _dio.post(
+      '/recurring-requests',
+      data: {
+        'district_id': districtId,
+        'address_detail': addressDetail,
+        'hours_requested': hoursRequested,
+        'day_of_week': dayOfWeek,
+        'time_of_day': timeOfDay,
+      },
+    );
+    return RecurringRequest.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<List<RecurringRequest>> getMyRecurringRequests() async {
+    final response = await _dio.get('/recurring-requests/mine');
+    final data = response.data as List<dynamic>;
+    return data
+        .map((item) => RecurringRequest.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  Future<void> cancelRecurringRequest(String id) async {
+    await _dio.delete('/recurring-requests/$id');
   }
 }

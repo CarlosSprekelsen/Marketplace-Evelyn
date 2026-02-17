@@ -109,7 +109,7 @@ Estas son necesarias antes de poner usuarios reales.
 
 Estas son hipótesis que solo se validan con usuarios reales. No implementar hasta tener datos.
 
-**4.1 Solicitudes recurrentes**
+**4.1 [COMPLETADA] Solicitudes recurrentes**
 - "Quiero limpieza todos los martes a las 10:00"
 - Solo implementar si múltiples clientes lo piden
 
@@ -136,8 +136,8 @@ Estas son hipótesis que solo se validan con usuarios reales. No implementar has
 - Flujo de backend: `POST /auth/forgot-password` + `POST /auth/reset-password` con token temporal y expiración corta
 - En producción: respuesta genérica para evitar enumeración de usuarios por email
 - En app: pantalla para solicitar reset y pantalla para definir nueva contrasena
-Forgot password en producción todavía no es end-to-end real: no hay envío de email/SMS del token (el backend devuelve mensaje genérico y no expone token en NODE_ENV=production).
-Falta integración de proveedor de correo + plantilla + link seguro de reset para cerrar el flujo completo de recuperación.
+- Forgot password en producción todavía no es end-to-end real: no hay envío de email/SMS del token (el backend devuelve mensaje genérico y no expone token en NODE_ENV=production).
+- Falta integración de proveedor de correo + plantilla + link seguro de reset para cerrar el flujo completo de recuperación.
 ---
 
 ## Orden sugerido de ejecución

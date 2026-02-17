@@ -14,6 +14,7 @@ import { DistrictsModule } from './districts/districts.module';
 import { PricingModule } from './pricing/pricing.module';
 import { ServiceRequestsModule } from './service-requests/service-requests.module';
 import { AdminModule } from './admin/admin.module';
+import { RecurringRequestsModule } from './recurring-requests/recurring-requests.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AdminModule } from './admin/admin.module';
     PricingModule,
     ServiceRequestsModule,
     AdminModule,
+    RecurringRequestsModule,
   ],
   controllers: [AppController],
   providers: [

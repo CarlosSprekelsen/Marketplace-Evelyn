@@ -5,6 +5,7 @@ import { User } from './users/user.entity';
 import { ServiceRequest } from './service-requests/service-request.entity';
 import { PricingRule } from './pricing/pricing-rule.entity';
 import { Rating } from './ratings/rating.entity';
+import { RecurringRequest } from './recurring-requests/recurring-request.entity';
 
 // Load environment variables
 config();
@@ -12,7 +13,7 @@ config();
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/marketplace',
-  entities: [District, User, ServiceRequest, PricingRule, Rating],
+  entities: [District, User, ServiceRequest, PricingRule, Rating, RecurringRequest],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
   logging: true,

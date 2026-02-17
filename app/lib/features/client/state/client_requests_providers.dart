@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/models/recurring_request.dart';
 import '../../../shared/models/service_request_model.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../client_requests_repository.dart';
@@ -13,6 +14,11 @@ final clientRequestsRepositoryProvider = Provider<ClientRequestsRepository>((ref
 final myRequestsProvider = FutureProvider<List<ServiceRequestModel>>((ref) async {
   final repository = ref.read(clientRequestsRepositoryProvider);
   return repository.getMyRequests();
+});
+
+final myRecurringRequestsProvider = FutureProvider<List<RecurringRequest>>((ref) async {
+  final repository = ref.read(clientRequestsRepositoryProvider);
+  return repository.getMyRecurringRequests();
 });
 
 String mapDioErrorToMessage(Object error) {

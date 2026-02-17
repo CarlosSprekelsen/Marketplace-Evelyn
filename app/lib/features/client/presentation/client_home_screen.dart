@@ -42,6 +42,12 @@ class ClientHomeScreen extends ConsumerWidget {
               onPressed: () => context.push('/client/requests'),
               child: const Text('Mis Solicitudes'),
             ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => context.push('/client/recurring'),
+              icon: const Icon(Icons.repeat),
+              label: const Text('Solicitudes Recurrentes'),
+            ),
           ],
         ),
       ),
