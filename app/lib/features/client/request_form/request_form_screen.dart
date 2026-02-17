@@ -11,12 +11,18 @@ class RequestFormScreen extends ConsumerStatefulWidget {
   const RequestFormScreen({
     super.key,
     this.prefillDistrictId,
-    this.prefillAddress,
+    this.prefillAddressStreet,
+    this.prefillAddressNumber,
+    this.prefillAddressFloorApt,
+    this.prefillAddressReference,
     this.prefillHours,
   });
 
   final String? prefillDistrictId;
-  final String? prefillAddress;
+  final String? prefillAddressStreet;
+  final String? prefillAddressNumber;
+  final String? prefillAddressFloorApt;
+  final String? prefillAddressReference;
   final int? prefillHours;
 
   @override
@@ -25,7 +31,10 @@ class RequestFormScreen extends ConsumerStatefulWidget {
 
 class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _addressController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _numberController = TextEditingController();
+  final _floorAptController = TextEditingController();
+  final _referenceController = TextEditingController();
 
   String? _districtId;
   int _hours = 1;
@@ -41,8 +50,17 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
     if (widget.prefillDistrictId != null) {
       _districtId = widget.prefillDistrictId;
     }
-    if (widget.prefillAddress != null) {
-      _addressController.text = widget.prefillAddress!;
+    if (widget.prefillAddressStreet != null) {
+      _streetController.text = widget.prefillAddressStreet!;
+    }
+    if (widget.prefillAddressNumber != null) {
+      _numberController.text = widget.prefillAddressNumber!;
+    }
+    if (widget.prefillAddressFloorApt != null) {
+      _floorAptController.text = widget.prefillAddressFloorApt!;
+    }
+    if (widget.prefillAddressReference != null) {
+      _referenceController.text = widget.prefillAddressReference!;
     }
     if (widget.prefillHours != null) {
       _hours = widget.prefillHours!;
@@ -51,7 +69,10 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
 
   @override
   void dispose() {
-    _addressController.dispose();
+    _streetController.dispose();
+    _numberController.dispose();
+    _floorAptController.dispose();
+    _referenceController.dispose();
     super.dispose();
   }
 
@@ -99,6 +120,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                 _districtId = value;
                                 _quote = null;
                               });
+                              _fetchQuoteIfReady();
                             },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -151,18 +173,64 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
-                    controller: _addressController,
-                    maxLines: 2,
+                    controller: _streetController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Dirección detallada',
+                      labelText: 'Calle / Avenida',
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Ingresa la dirección';
+                        return 'Ingresa la calle o avenida';
                       }
-                      if (value.length > 500) {
-                        return 'Máximo 500 caracteres';
+                      if (value.length > 200) {
+                        return 'Máximo 200 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _numberController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Nº Casa / Edificio',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa el número';
+                      }
+                      if (value.length > 50) {
+                        return 'Máximo 50 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _floorAptController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Piso / Apartamento (opcional)',
+                    ),
+                    validator: (value) {
+                      if (value != null && value.length > 100) {
+                        return 'Máximo 100 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _referenceController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Punto de referencia (opcional)',
+                      hintText: 'Ej: frente al parque, casa color azul',
+                    ),
+                    validator: (value) {
+                      if (value != null && value.length > 300) {
+                        return 'Máximo 300 caracteres';
                       }
                       return null;
                     },
@@ -187,6 +255,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                         _hours = value ?? 1;
                         _quote = null;
                       });
+                      _fetchQuoteIfReady();
                     },
                   ),
                   const SizedBox(height: 12),
@@ -199,45 +268,18 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_message != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _message!,
-                        style: const TextStyle(color: Colors.red),
+                  if (_loadingQuote)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
                     ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _loadingQuote ? null : _onQuotePressed,
-                          child: _loadingQuote
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Ver Precio'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _submitting ? null : _onConfirmPressed,
-                          child: _submitting
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Confirmar Solicitud'),
-                        ),
-                      ),
-                    ],
-                  ),
                   if (_quote != null) ...[
-                    const SizedBox(height: 16),
                     Card(
                       color: Colors.green.shade50,
                       child: Padding(
@@ -267,7 +309,26 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
                   ],
+                  if (_message != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        _message!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  FilledButton(
+                    onPressed: _submitting ? null : _onConfirmPressed,
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Confirmar Solicitud'),
+                  ),
                 ],
               ),
             ),
@@ -275,6 +336,26 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _fetchQuoteIfReady() async {
+    final districtId = _districtId;
+    if (districtId == null || districtId.isEmpty) return;
+
+    setState(() {
+      _loadingQuote = true;
+      _message = null;
+    });
+
+    try {
+      final repo = ref.read(clientRequestsRepositoryProvider);
+      final quote = await repo.getQuote(districtId: districtId, hours: _hours);
+      if (mounted) setState(() => _quote = quote);
+    } catch (error) {
+      if (mounted) setState(() => _message = mapDioErrorToMessage(error));
+    } finally {
+      if (mounted) setState(() => _loadingQuote = false);
+    }
   }
 
   Future<void> _pickDateTime() async {
@@ -332,34 +413,6 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
     );
   }
 
-  Future<void> _onQuotePressed() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    final districtId = _districtId;
-    if (districtId == null || districtId.isEmpty) {
-      setState(() => _message = 'Selecciona un distrito');
-      return;
-    }
-
-    setState(() {
-      _loadingQuote = true;
-      _message = null;
-    });
-
-    try {
-      final repo = ref.read(clientRequestsRepositoryProvider);
-      final quote = await repo.getQuote(districtId: districtId, hours: _hours);
-      setState(() => _quote = quote);
-    } catch (error) {
-      setState(() => _message = mapDioErrorToMessage(error));
-    } finally {
-      if (mounted) {
-        setState(() => _loadingQuote = false);
-      }
-    }
-  }
-
   Future<void> _onConfirmPressed() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -383,7 +436,14 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
       final repo = ref.read(clientRequestsRepositoryProvider);
       final request = await repo.createRequest(
         districtId: districtId,
-        addressDetail: _addressController.text.trim(),
+        addressStreet: _streetController.text.trim(),
+        addressNumber: _numberController.text.trim(),
+        addressFloorApt: _floorAptController.text.trim().isEmpty
+            ? null
+            : _floorAptController.text.trim(),
+        addressReference: _referenceController.text.trim().isEmpty
+            ? null
+            : _referenceController.text.trim(),
         hoursRequested: _hours,
         scheduledAtLocal: _scheduledAt!,
       );

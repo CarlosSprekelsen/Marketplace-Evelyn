@@ -66,12 +66,21 @@ export class ServiceRequest {
   @JoinColumn({ name: 'district_id' })
   district: District;
 
-  @ApiProperty({
-    description: 'Detailed address',
-    example: 'Building 5, Apartment 302',
-  })
-  @Column({ type: 'text', nullable: false })
-  address_detail: string;
+  @ApiProperty({ description: 'Street / Avenue', example: 'Calle 50' })
+  @Column({ type: 'varchar', length: 200, nullable: false })
+  address_street: string;
+
+  @ApiProperty({ description: 'House / Building number', example: 'Edificio 5' })
+  @Column({ type: 'varchar', length: 50, nullable: false })
+  address_number: string;
+
+  @ApiProperty({ description: 'Floor / Apartment', example: 'Piso 3, Apt 302', required: false })
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  address_floor_apt: string | null;
+
+  @ApiProperty({ description: 'Reference point', example: 'Frente al parque', required: false })
+  @Column({ type: 'varchar', length: 300, nullable: true })
+  address_reference: string | null;
 
   @ApiProperty({
     description: 'Hours requested (1-8)',

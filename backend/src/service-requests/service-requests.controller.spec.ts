@@ -29,7 +29,10 @@ describe('ServiceRequestsController', () => {
     client_id: 'user-1',
     provider_id: null,
     district_id: 'district-1',
-    address_detail: 'Test Address',
+    address_street: 'Test Street',
+    address_number: '10',
+    address_floor_apt: null,
+    address_reference: null,
     hours_requested: 3,
     price_total: 150,
     scheduled_at: new Date('2026-03-01T10:00:00Z'),
@@ -73,7 +76,8 @@ describe('ServiceRequestsController', () => {
       mockService.create.mockResolvedValueOnce(mockServiceRequest);
       const dto = {
         district_id: 'district-1',
-        address_detail: 'Test Address',
+        address_street: 'Test Street',
+        address_number: '10',
         hours_requested: 3,
         scheduled_at: new Date('2026-03-01T10:00:00Z'),
       };
@@ -89,7 +93,8 @@ describe('ServiceRequestsController', () => {
       mockService.create.mockResolvedValueOnce(mock2Hour);
       const dto = {
         district_id: 'district-1',
-        address_detail: 'Test',
+        address_street: 'Test',
+        address_number: '1',
         hours_requested: 2,
         scheduled_at: new Date('2026-03-01T10:00:00Z'),
       };
@@ -106,7 +111,8 @@ describe('ServiceRequestsController', () => {
       mockService.create.mockResolvedValueOnce(mock5Hour);
       const dto = {
         district_id: 'district-1',
-        address_detail: 'Test',
+        address_street: 'Test',
+        address_number: '1',
         hours_requested: 5,
         scheduled_at: new Date('2026-03-01T10:00:00Z'),
       };
@@ -178,7 +184,7 @@ describe('ServiceRequestsController', () => {
 
       const result = await controller.findOne('request-1', { user: mockUser });
 
-      expect(result.address_detail).toEqual('Test Address');
+      expect(result.address_street).toEqual('Test Street');
       expect(result.status).toEqual('PENDING');
       expect(result.hours_requested).toBe(3);
       expect(result.price_total).toBe(150);

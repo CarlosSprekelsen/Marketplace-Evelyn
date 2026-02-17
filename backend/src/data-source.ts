@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/marketplace',
   entities: [District, User, ServiceRequest, PricingRule, Rating, RecurringRequest],
-  migrations: ['src/migrations/*.ts'],
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
   logging: true,
 });

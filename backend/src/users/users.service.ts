@@ -20,7 +20,7 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({
-      where: { email },
+      where: { email: email.toLowerCase() },
       relations: ['district'],
     });
   }
@@ -45,7 +45,7 @@ export class UsersService {
 
     // Create user
     const user = this.usersRepository.create({
-      email: userData.email,
+      email: userData.email.toLowerCase(),
       password_hash,
       full_name: userData.full_name,
       phone: userData.phone,

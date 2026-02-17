@@ -28,7 +28,7 @@ async function main() {
   await AppDataSource.initialize();
 
   const userRepository = AppDataSource.getRepository(User);
-  const user = await userRepository.findOne({ where: { email } });
+  const user = await userRepository.findOne({ where: { email: email.toLowerCase() } });
 
   if (!user) {
     console.error(`User not found: ${email}`);

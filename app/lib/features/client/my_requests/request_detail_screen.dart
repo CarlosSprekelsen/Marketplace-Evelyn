@@ -115,7 +115,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen>
           _row('Estado', request.status.value),
           _row('Distrito', request.district?.name ?? request.districtId),
           _row('Precio', request.priceTotal.toStringAsFixed(2)),
-          _row('Direccion', request.addressDetail),
+          _row('Direccion', request.fullAddress),
           _row('Fecha', formatDateTime(request.scheduledAt)),
           if (request.status == ServiceRequestStatus.pending)
             _row('Tiempo restante', _formatRemaining(_remaining)),
@@ -165,7 +165,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen>
                     onPressed: () {
                       final params = {
                         'district_id': request.districtId,
-                        'address': request.addressDetail,
+                        'address_street': request.addressStreet,
+                        'address_number': request.addressNumber,
+                        if (request.addressFloorApt != null)
+                          'address_floor_apt': request.addressFloorApt!,
+                        if (request.addressReference != null)
+                          'address_reference': request.addressReference!,
                         'hours': request.hoursRequested.toString(),
                       };
                       final uri = Uri(path: '/client/request/new', queryParameters: params);

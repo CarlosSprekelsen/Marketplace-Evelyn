@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/models/price_quote.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../state/client_requests_providers.dart';
 
@@ -14,12 +15,17 @@ class RecurringFormScreen extends ConsumerStatefulWidget {
 
 class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _addressController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _numberController = TextEditingController();
+  final _floorAptController = TextEditingController();
+  final _referenceController = TextEditingController();
 
   String? _districtId;
   int _hours = 1;
   int _dayOfWeek = 1; // 1=Mon
   String _timeOfDay = '10:00';
+  PriceQuote? _quote;
+  bool _loadingQuote = false;
   bool _submitting = false;
   String? _message;
 
@@ -27,7 +33,10 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
 
   @override
   void dispose() {
-    _addressController.dispose();
+    _streetController.dispose();
+    _numberController.dispose();
+    _floorAptController.dispose();
+    _referenceController.dispose();
     super.dispose();
   }
 
@@ -66,7 +75,13 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                         items: districts
                             .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name)))
                             .toList(growable: false),
-                        onChanged: (v) => setState(() => _districtId = v),
+                        onChanged: (v) {
+                          setState(() {
+                            _districtId = v;
+                            _quote = null;
+                          });
+                          _fetchQuoteIfReady();
+                        },
                         validator: (v) => v == null || v.isEmpty ? 'Selecciona un distrito' : null,
                       );
                     },
@@ -76,17 +91,55 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Address
+                  // Address fields
                   TextFormField(
-                    controller: _addressController,
+                    controller: _streetController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Calle / Avenida',
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Ingresa la calle o avenida';
+                      if (v.length > 200) return 'Máximo 200 caracteres';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _numberController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Nº Casa / Edificio',
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Ingresa el número';
+                      if (v.length > 50) return 'Máximo 50 caracteres';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _floorAptController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Piso / Apartamento (opcional)',
+                    ),
+                    validator: (v) {
+                      if (v != null && v.length > 100) return 'Máximo 100 caracteres';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _referenceController,
                     maxLines: 2,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Dirección detallada',
+                      labelText: 'Punto de referencia (opcional)',
+                      hintText: 'Ej: frente al parque, casa color azul',
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Ingresa la dirección';
-                      if (v.length > 500) return 'Máximo 500 caracteres';
+                      if (v != null && v.length > 300) return 'Máximo 300 caracteres';
                       return null;
                     },
                   ),
@@ -102,7 +155,13 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                     items: List.generate(8, (i) => i + 1)
                         .map((h) => DropdownMenuItem(value: h, child: Text('$h hora(s)')))
                         .toList(growable: false),
-                    onChanged: (v) => setState(() => _hours = v ?? 1),
+                    onChanged: (v) {
+                      setState(() {
+                        _hours = v ?? 1;
+                        _quote = null;
+                      });
+                      _fetchQuoteIfReady();
+                    },
                   ),
                   const SizedBox(height: 16),
 
@@ -143,7 +202,47 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
+                  // Auto pricing
+                  if (_loadingQuote)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  if (_quote != null) ...[
+                    Card(
+                      color: Colors.green.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_quote!.hours} hora${_quote!.hours == 1 ? '' : 's'} x \$${_quote!.pricePerHour.toStringAsFixed(2)}/hora',
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                            const Divider(height: 20),
+                            Text(
+                              'Total por sesión: \$${_quote!.priceTotal.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
                   if (_message != null)
                     Padding(
@@ -167,6 +266,26 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _fetchQuoteIfReady() async {
+    final districtId = _districtId;
+    if (districtId == null || districtId.isEmpty) return;
+
+    setState(() {
+      _loadingQuote = true;
+      _message = null;
+    });
+
+    try {
+      final repo = ref.read(clientRequestsRepositoryProvider);
+      final quote = await repo.getQuote(districtId: districtId, hours: _hours);
+      if (mounted) setState(() => _quote = quote);
+    } catch (error) {
+      if (mounted) setState(() => _message = mapDioErrorToMessage(error));
+    } finally {
+      if (mounted) setState(() => _loadingQuote = false);
+    }
   }
 
   Future<void> _pickTime() async {
@@ -212,7 +331,14 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
       final repo = ref.read(clientRequestsRepositoryProvider);
       await repo.createRecurringRequest(
         districtId: _districtId!,
-        addressDetail: _addressController.text.trim(),
+        addressStreet: _streetController.text.trim(),
+        addressNumber: _numberController.text.trim(),
+        addressFloorApt: _floorAptController.text.trim().isEmpty
+            ? null
+            : _floorAptController.text.trim(),
+        addressReference: _referenceController.text.trim().isEmpty
+            ? null
+            : _referenceController.text.trim(),
         hoursRequested: _hours,
         dayOfWeek: _dayOfWeek,
         timeOfDay: _timeOfDay,

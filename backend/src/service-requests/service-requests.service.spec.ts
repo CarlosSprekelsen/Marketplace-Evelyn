@@ -99,7 +99,8 @@ describe('ServiceRequestsService', () => {
 
     const result = await service.create(clientUser, {
       district_id: 'district-1',
-      address_detail: 'Calle 1 #23',
+      address_street: 'Calle 1',
+      address_number: '#23',
       hours_requested: 3,
       scheduled_at: '2099-03-01T10:00:00.000Z',
     });
@@ -121,7 +122,8 @@ describe('ServiceRequestsService', () => {
     await expect(
       service.create(clientUser, {
         district_id: 'district-x',
-        address_detail: 'Calle 1 #23',
+        address_street: 'Calle 1',
+        address_number: '#23',
         hours_requested: 3,
         scheduled_at: '2099-03-01T10:00:00.000Z',
       }),
@@ -138,7 +140,8 @@ describe('ServiceRequestsService', () => {
     await expect(
       service.create(clientUser, {
         district_id: 'district-1',
-        address_detail: 'Calle 1 #23',
+        address_street: 'Calle 1',
+        address_number: '#23',
         hours_requested: 3,
         scheduled_at: '2020-03-01T10:00:00.000Z',
       }),
@@ -154,7 +157,8 @@ describe('ServiceRequestsService', () => {
         price_total: '40.00',
         scheduled_at: new Date('2099-03-01T10:00:00.000Z'),
         expires_at: new Date(Date.now() + 120000),
-        address_detail: 'Should not be returned',
+        address_street: 'Should not be returned',
+        address_number: '1',
       },
     ]);
 
@@ -167,7 +171,7 @@ describe('ServiceRequestsService', () => {
         hours_requested: 2,
       }),
     );
-    expect(available[0]).not.toHaveProperty('address_detail');
+    expect(available[0]).not.toHaveProperty('address_street');
   });
 
   it('accepts request atomically for verified provider in same district', async () => {

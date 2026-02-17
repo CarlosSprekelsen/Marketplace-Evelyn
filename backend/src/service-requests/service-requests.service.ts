@@ -58,7 +58,10 @@ export class ServiceRequestsService {
     const request = this.serviceRequestsRepository.create({
       client_id: client.id,
       district_id: dto.district_id,
-      address_detail: dto.address_detail,
+      address_street: dto.address_street,
+      address_number: dto.address_number,
+      address_floor_apt: dto.address_floor_apt ?? null,
+      address_reference: dto.address_reference ?? null,
       hours_requested: dto.hours_requested,
       price_total: quote.price_total,
       scheduled_at: scheduledAt,

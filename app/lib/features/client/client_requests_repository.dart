@@ -26,7 +26,10 @@ class ClientRequestsRepository {
 
   Future<ServiceRequestModel> createRequest({
     required String districtId,
-    required String addressDetail,
+    required String addressStreet,
+    required String addressNumber,
+    String? addressFloorApt,
+    String? addressReference,
     required int hoursRequested,
     required DateTime scheduledAtLocal,
   }) async {
@@ -34,7 +37,10 @@ class ClientRequestsRepository {
       '/service-requests',
       data: {
         'district_id': districtId,
-        'address_detail': addressDetail,
+        'address_street': addressStreet,
+        'address_number': addressNumber,
+        if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
+        if (addressReference != null) 'address_reference': addressReference,
         'hours_requested': hoursRequested,
         'scheduled_at': scheduledAtLocal.toUtc().toIso8601String(),
       },
@@ -96,7 +102,10 @@ class ClientRequestsRepository {
 
   Future<RecurringRequest> createRecurringRequest({
     required String districtId,
-    required String addressDetail,
+    required String addressStreet,
+    required String addressNumber,
+    String? addressFloorApt,
+    String? addressReference,
     required int hoursRequested,
     required int dayOfWeek,
     required String timeOfDay,
@@ -105,7 +114,10 @@ class ClientRequestsRepository {
       '/recurring-requests',
       data: {
         'district_id': districtId,
-        'address_detail': addressDetail,
+        'address_street': addressStreet,
+        'address_number': addressNumber,
+        if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
+        if (addressReference != null) 'address_reference': addressReference,
         'hours_requested': hoursRequested,
         'day_of_week': dayOfWeek,
         'time_of_day': timeOfDay,

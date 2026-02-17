@@ -3,6 +3,8 @@ import {
   IsDateString,
   IsInt,
   IsNotEmpty,
+  IsOptional,
+  IsString,
   IsUUID,
   Max,
   MaxLength,
@@ -33,10 +35,27 @@ export class CreateServiceRequestDto {
   @IsUUID()
   district_id: string;
 
-  @ApiProperty({ example: 'Calle 1 #23, Edificio Azul, Piso 2' })
+  @ApiProperty({ example: 'Calle 50' })
   @IsNotEmpty()
-  @MaxLength(500)
-  address_detail: string;
+  @MaxLength(200)
+  address_street: string;
+
+  @ApiProperty({ example: 'Edificio 5' })
+  @IsNotEmpty()
+  @MaxLength(50)
+  address_number: string;
+
+  @ApiProperty({ example: 'Piso 3, Apt 302', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  address_floor_apt?: string;
+
+  @ApiProperty({ example: 'Frente al parque', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  address_reference?: string;
 
   @ApiProperty({ example: 3, minimum: 1, maximum: 8 })
   @IsInt()

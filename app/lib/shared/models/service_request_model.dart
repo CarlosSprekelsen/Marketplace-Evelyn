@@ -26,7 +26,10 @@ class ServiceRequestModel {
     required this.clientId,
     this.providerId,
     required this.districtId,
-    required this.addressDetail,
+    required this.addressStreet,
+    required this.addressNumber,
+    this.addressFloorApt,
+    this.addressReference,
     required this.hoursRequested,
     required this.priceTotal,
     required this.scheduledAt,
@@ -48,7 +51,10 @@ class ServiceRequestModel {
   final String clientId;
   final String? providerId;
   final String districtId;
-  final String addressDetail;
+  final String addressStreet;
+  final String addressNumber;
+  final String? addressFloorApt;
+  final String? addressReference;
   final int hoursRequested;
   final double priceTotal;
   final DateTime scheduledAt;
@@ -65,13 +71,27 @@ class ServiceRequestModel {
   final User? provider;
   final District? district;
 
+  String get fullAddress {
+    final parts = <String>[addressStreet, addressNumber];
+    if (addressFloorApt != null && addressFloorApt!.isNotEmpty) {
+      parts.add(addressFloorApt!);
+    }
+    if (addressReference != null && addressReference!.isNotEmpty) {
+      parts.add(addressReference!);
+    }
+    return parts.join(', ');
+  }
+
   factory ServiceRequestModel.fromJson(Map<String, dynamic> json) {
     return ServiceRequestModel(
       id: json['id'] as String,
       clientId: json['client_id'] as String,
       providerId: json['provider_id'] as String?,
       districtId: json['district_id'] as String,
-      addressDetail: json['address_detail'] as String,
+      addressStreet: json['address_street'] as String? ?? '',
+      addressNumber: json['address_number'] as String? ?? '',
+      addressFloorApt: json['address_floor_apt'] as String?,
+      addressReference: json['address_reference'] as String?,
       hoursRequested: json['hours_requested'] as int,
       priceTotal: _toDouble(json['price_total']),
       scheduledAt: DateTime.parse(json['scheduled_at'] as String),

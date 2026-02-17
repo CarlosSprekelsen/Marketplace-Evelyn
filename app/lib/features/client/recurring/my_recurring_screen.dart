@@ -87,7 +87,7 @@ class _MyRecurringScreenState extends ConsumerState<MyRecurringScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          r.addressDetail,
+                          r.fullAddress,
                           style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

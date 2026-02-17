@@ -40,7 +40,10 @@ export class RecurringRequestsService {
     const recurring = this.recurringRepository.create({
       client_id: clientId,
       district_id: dto.district_id,
-      address_detail: dto.address_detail,
+      address_street: dto.address_street,
+      address_number: dto.address_number,
+      address_floor_apt: dto.address_floor_apt ?? null,
+      address_reference: dto.address_reference ?? null,
       hours_requested: dto.hours_requested,
       day_of_week: dto.day_of_week,
       time_of_day: dto.time_of_day,
@@ -99,7 +102,10 @@ export class RecurringRequestsService {
 
         await this.serviceRequestsService.create(client, {
           district_id: recurring.district_id,
-          address_detail: recurring.address_detail,
+          address_street: recurring.address_street,
+          address_number: recurring.address_number,
+          address_floor_apt: recurring.address_floor_apt ?? undefined,
+          address_reference: recurring.address_reference ?? undefined,
           hours_requested: recurring.hours_requested,
           scheduled_at: recurring.next_scheduled_at.toISOString(),
         });

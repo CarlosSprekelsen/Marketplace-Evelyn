@@ -37,7 +37,8 @@ describe('RecurringRequestsService', () => {
   describe('create', () => {
     const dto = {
       district_id: 'dist-1',
-      address_detail: 'Building 5, Apt 302',
+      address_street: 'Building 5',
+      address_number: 'Apt 302',
       hours_requested: 3,
       day_of_week: 2,
       time_of_day: '10:00',
@@ -112,7 +113,8 @@ describe('RecurringRequestsService', () => {
           id: 'rec-1',
           client_id: 'client-1',
           district_id: 'dist-1',
-          address_detail: 'Apt 5',
+          address_street: 'Calle Principal',
+          address_number: 'Apt 5',
           hours_requested: 2,
           next_scheduled_at: pastDate,
         },
