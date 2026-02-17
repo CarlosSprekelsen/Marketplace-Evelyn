@@ -103,7 +103,7 @@ class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen>
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: _jobs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final job = _jobs[index];
                 final remaining = _remainingLabel(job.expiresAt);

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/api/dio_client.dart';

@@ -112,7 +112,7 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> with Widget
                         onTap: () => context.push('/client/requests/${request.id}'),
                       );
                     },
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemCount: filtered.length,
                   ),
                 );

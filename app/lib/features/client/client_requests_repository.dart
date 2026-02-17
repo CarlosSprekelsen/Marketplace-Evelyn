@@ -43,11 +43,13 @@ class ClientRequestsRepository {
   }
 
   Future<List<ServiceRequestModel>> getMyRequests({String? status}) async {
+    final queryParameters = <String, dynamic>{
+      'status': status,
+    }..removeWhere((_, value) => value == null);
+
     final response = await _dio.get(
       '/service-requests/mine',
-      queryParameters: {
-        if (status != null) 'status': status,
-      },
+      queryParameters: queryParameters,
     );
     final data = response.data as List<dynamic>;
     return data

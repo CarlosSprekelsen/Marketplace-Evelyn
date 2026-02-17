@@ -96,7 +96,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(12),
       itemCount: _requests.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final request = _requests[index];
         return Card(
