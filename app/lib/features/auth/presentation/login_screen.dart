@@ -76,6 +76,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: state.isLoading ? null : () => context.go('/forgot-password'),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Forgot password',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   if (state.message != null)
                     Padding(

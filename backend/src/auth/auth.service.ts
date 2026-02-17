@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,9 +13,14 @@ import { UsersService } from '../users/users.service';
 import { District } from '../districts/district.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
+  private static readonly FORGOT_PASSWORD_MESSAGE =
+    'Si el email existe, recibiras instrucciones para restablecer tu contrasena.';
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -59,7 +65,13 @@ export class AuthService {
     await this.usersService.updateRefreshTokenHash(user.id, tokens.refresh_token);
 
     // Remove sensitive data
-    const { password_hash, refresh_token_hash, ...userWithoutSensitiveData } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...userWithoutSensitiveData
+    } = user;
 
     return {
       access_token: tokens.access_token,
@@ -95,7 +107,13 @@ export class AuthService {
     await this.usersService.updateRefreshTokenHash(user.id, tokens.refresh_token);
 
     // Remove sensitive data
-    const { password_hash, refresh_token_hash, ...userWithoutSensitiveData } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...userWithoutSensitiveData
+    } = user;
 
     return {
       access_token: tokens.access_token,
@@ -146,9 +164,56 @@ export class AuthService {
     }
 
     // Remove sensitive data
-    const { password_hash, refresh_token_hash, ...userWithoutSensitiveData } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...userWithoutSensitiveData
+    } = user;
 
     return userWithoutSensitiveData;
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const user = await this.usersService.findByEmail(forgotPasswordDto.email);
+    if (!user) {
+      return { message: AuthService.FORGOT_PASSWORD_MESSAGE };
+    }
+
+    const resetToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await this.usersService.setPasswordResetToken(user.id, resetToken, expiresAt);
+
+    const isProduction = this.configService.get('nodeEnv') === 'production';
+    if (isProduction) {
+      return { message: AuthService.FORGOT_PASSWORD_MESSAGE };
+    }
+
+    return {
+      message: AuthService.FORGOT_PASSWORD_MESSAGE,
+      reset_token: resetToken,
+    };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const user = await this.usersService.findByEmail(resetPasswordDto.email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    const isValidResetToken = await this.usersService.validatePasswordResetToken(
+      user,
+      resetPasswordDto.reset_token,
+    );
+    if (!isValidResetToken) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    await this.usersService.updatePassword(user.id, resetPasswordDto.new_password);
+    await this.usersService.clearPasswordResetToken(user.id);
+
+    return { message: 'Password updated successfully' };
   }
 
   private async generateTokens(userId: string, email: string) {

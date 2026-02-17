@@ -253,6 +253,19 @@ El cliente debe crear una nueva solicitud.
 2. Intentar instalar de nuevo
 3. Si persiste, verificar que el telefono tiene espacio suficiente
 
+### Olvide la password de mi cuenta
+
+La app tiene un enlace "Forgot password" en la pantalla de login. En desarrollo, el flujo es automatico (la app recibe el token y navega al formulario de reset). En produccion, como no hay envio de email, usar el script CLI desde el VPS:
+
+```bash
+docker compose -f ~/Marketplace-Evelyn/infra/docker-compose.prod.yml \
+  --env-file ~/Marketplace-Evelyn/infra/.env.production \
+  exec -T backend npx ts-node -r tsconfig-paths/register \
+  src/scripts/reset-password.ts tu@email.com NuevaPassword123
+```
+
+Ver la seccion "Recuperacion de contrasena" en `MANUAL-BACKEND-DEPLOY.md` para mas opciones.
+
 ### No puedo acceder al VPS
 
 1. Verificar que DuckDNS esta actualizando la IP:

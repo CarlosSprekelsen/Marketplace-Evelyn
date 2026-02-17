@@ -214,7 +214,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final statusCode = error.response?.statusCode;
       final data = error.response?.data;
       if (data is Map && data['message'] is String) {
-        return data['message'] as String;
+        final message = data['message'] as String;
+        if (message == 'Invalid credentials') {
+          return 'Credenciales invalidas.';
+        }
+        if (message == 'User is blocked') {
+          return 'Usuario bloqueado.';
+        }
+        if (message == 'Invalid or expired reset token') {
+          return 'Token invalido o expirado.';
+        }
+        return message;
       }
 
       if (statusCode == 401) {

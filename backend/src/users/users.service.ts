@@ -78,6 +78,56 @@ export class UsersService {
     await this.usersRepository.update(userId, { refresh_token_hash } as any);
   }
 
+  async setPasswordResetToken(userId: string, resetToken: string, expiresAt: Date): Promise<void> {
+    const password_reset_token_hash = await bcrypt.hash(resetToken, 10);
+    await this.usersRepository.update(userId, {
+      password_reset_token_hash,
+      password_reset_expires_at: expiresAt,
+    } as any);
+  }
+
+  async validatePasswordResetToken(user: User, resetToken: string): Promise<boolean> {
+    if (!user.password_reset_token_hash || !user.password_reset_expires_at) {
+      return false;
+    }
+
+    if (user.password_reset_expires_at.getTime() < Date.now()) {
+      return false;
+    }
+
+    return bcrypt.compare(resetToken, user.password_reset_token_hash);
+  }
+
+  async updatePassword(userId: string, newPassword: string): Promise<void> {
+    const password_hash = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.update(userId, {
+      password_hash,
+      refresh_token_hash: null,
+    } as any);
+  }
+
+  async clearPasswordResetToken(userId: string): Promise<void> {
+    await this.usersRepository.update(userId, {
+      password_reset_token_hash: null,
+      password_reset_expires_at: null,
+    } as any);
+  }
+
+  async adminResetPassword(userId: string, newPassword: string): Promise<User> {
+    const password_hash = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.update(userId, {
+      password_hash,
+      refresh_token_hash: null,
+      password_reset_token_hash: null,
+      password_reset_expires_at: null,
+    } as any);
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found after password reset');
+    }
+    return user;
+  }
+
   async setAvailability(userId: string, isAvailable: boolean): Promise<User> {
     await this.usersRepository.update(userId, { is_available: isAvailable });
     const user = await this.findById(userId);

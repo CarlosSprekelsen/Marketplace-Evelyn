@@ -285,6 +285,93 @@ docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.production
 
 ---
 
+## Recuperacion de contrasena
+
+### Contexto
+
+El flujo de forgot-password funciona end-to-end, pero en produccion NO envia email/SMS (respuesta generica para evitar enumeracion de usuarios). Para restablecer passwords hay dos mecanismos accesibles solo desde la LAN/VPN:
+
+### Opcion 1: Script CLI (no requiere login de admin)
+
+Ejecutar directamente en el VPS via SSH:
+
+```bash
+# Sintaxis:
+# reset-password.ts <email> <nueva_password>
+
+# Si el backend corre en Docker:
+docker compose -f ~/Marketplace-Evelyn/infra/docker-compose.prod.yml \
+  --env-file ~/Marketplace-Evelyn/infra/.env.production \
+  exec -T backend npx ts-node -r tsconfig-paths/register \
+  src/scripts/reset-password.ts usuario@email.com NuevaPassword123
+
+# Si tienes acceso directo al backend (dev local):
+cd ~/Marketplace-Evelyn/backend
+DATABASE_URL=postgresql://marketplace:TUPASSWORD@localhost:5432/marketplace \
+  npx ts-node -r tsconfig-paths/register \
+  src/scripts/reset-password.ts usuario@email.com NuevaPassword123
+```
+
+El script:
+- Busca el usuario por email
+- Hashea la nueva password con bcrypt (10 rounds)
+- Invalida refresh tokens y tokens de reset existentes
+- Imprime confirmacion con el rol del usuario
+
+### Opcion 2: Endpoint admin (requiere JWT de admin)
+
+```bash
+# 1. Login como admin para obtener el token
+TOKEN=$(curl -s -X POST https://claudiasrv.duckdns.org/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@email.com","password":"AdminPassword123"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# 2. Obtener el UUID del usuario
+curl -s -H "Authorization: Bearer $TOKEN" \
+  https://claudiasrv.duckdns.org/admin/users | python3 -c "
+import sys,json
+for u in json.load(sys.stdin):
+    print(f\"{u['id']}  {u['email']}  {u['role']}\")
+"
+
+# 3. Forzar reset del password
+curl -X PATCH https://claudiasrv.duckdns.org/admin/users/<UUID>/reset-password \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"new_password": "NuevaPassword123"}'
+```
+
+### Opcion 3: SQL directo (emergencia)
+
+Si no tienes acceso al script ni al admin:
+
+```bash
+# Conectar a PostgreSQL
+docker compose -f ~/Marketplace-Evelyn/infra/docker-compose.prod.yml \
+  --env-file ~/Marketplace-Evelyn/infra/.env.production \
+  exec -T postgres psql -U marketplace
+
+# Generar hash bcrypt e insertar (requiere node):
+docker compose -f ~/Marketplace-Evelyn/infra/docker-compose.prod.yml \
+  --env-file ~/Marketplace-Evelyn/infra/.env.production \
+  exec -T backend node -e "
+    const bcrypt = require('bcrypt');
+    bcrypt.hash('NuevaPassword123', 10).then(h => {
+      console.log('UPDATE users SET password_hash = \\'' + h + '\\', refresh_token_hash = NULL, password_reset_token_hash = NULL, password_reset_expires_at = NULL WHERE email = \\'usuario@email.com\\';');
+    });
+  "
+# Copiar el SQL generado y ejecutarlo en psql
+```
+
+### Flujo forgot-password en la app (para desarrollo/testing)
+
+En entornos donde `NODE_ENV != production`, el endpoint `POST /auth/forgot-password` devuelve el `reset_token` en la respuesta JSON. La app automaticamente navega a la pantalla de reset con el token pre-rellenado.
+
+En produccion (`NODE_ENV=production`), el endpoint devuelve solo el mensaje generico. Para cerrar el flujo completo en produccion se necesitaria integrar un proveedor de correo (SendGrid free tier, Resend, etc.).
+
+---
+
 ## Operaciones comunes
 
 ### Re-desplegar despues de un cambio

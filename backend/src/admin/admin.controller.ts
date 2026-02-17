@@ -10,6 +10,7 @@ import { SetUserBlockedDto } from './dto/set-user-blocked.dto';
 import { Body } from '@nestjs/common';
 import { ServiceRequestsService } from '../service-requests/service-requests.service';
 import { SetRequestStatusDto } from './dto/set-request-status.dto';
+import { AdminResetPasswordDto } from './dto/admin-reset-password.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -45,6 +46,13 @@ export class AdminController {
     return this.sanitizeUser(user);
   }
 
+  @Patch('users/:id/reset-password')
+  @ApiOperation({ summary: 'Force-reset a user password (admin only)' })
+  async resetPassword(@Param('id') id: string, @Body() dto: AdminResetPasswordDto) {
+    const user = await this.usersService.adminResetPassword(id, dto.new_password);
+    return this.sanitizeUser(user);
+  }
+
   @Get('service-requests')
   @ApiOperation({ summary: 'List service requests for admin dashboard' })
   async listServiceRequests() {
@@ -66,7 +74,13 @@ export class AdminController {
   }
 
   private sanitizeUser(user: Record<string, any>) {
-    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...safeUser
+    } = user;
     return safeUser;
   }
 }

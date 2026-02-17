@@ -8,6 +8,8 @@ describe('AuthService', () => {
     email: 'user@mail.com',
     password_hash: 'hashed-password',
     refresh_token_hash: 'hashed-refresh',
+    password_reset_token_hash: null,
+    password_reset_expires_at: null,
     role: UserRole.CLIENT,
     full_name: 'User Test',
     phone: '999',
@@ -26,6 +28,10 @@ describe('AuthService', () => {
     validatePassword: jest.Mock;
     updateRefreshTokenHash: jest.Mock;
     validateRefreshToken: jest.Mock;
+    setPasswordResetToken: jest.Mock;
+    validatePasswordResetToken: jest.Mock;
+    updatePassword: jest.Mock;
+    clearPasswordResetToken: jest.Mock;
   };
   let jwtService: { signAsync: jest.Mock };
   let configService: { get: jest.Mock };
@@ -39,6 +45,10 @@ describe('AuthService', () => {
       validatePassword: jest.fn(),
       updateRefreshTokenHash: jest.fn(),
       validateRefreshToken: jest.fn(),
+      setPasswordResetToken: jest.fn(),
+      validatePasswordResetToken: jest.fn(),
+      updatePassword: jest.fn(),
+      clearPasswordResetToken: jest.fn(),
     };
 
     jwtService = {
@@ -54,6 +64,7 @@ describe('AuthService', () => {
         if (key === 'jwt.expiresIn') return '30m';
         if (key === 'jwt.refreshSecret') return 'refresh-secret';
         if (key === 'jwt.refreshExpiresIn') return '30d';
+        if (key === 'nodeEnv') return 'test';
         return undefined;
       }),
     };
@@ -194,5 +205,66 @@ describe('AuthService', () => {
         accepted_terms: false,
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('forgot password: returns generic message when user does not exist', async () => {
+    usersService.findByEmail.mockResolvedValue(null);
+
+    const result = await authService.forgotPassword({ email: 'missing@mail.com' });
+
+    expect(result).toEqual({
+      message: 'Si el email existe, recibiras instrucciones para restablecer tu contrasena.',
+    });
+    expect(usersService.setPasswordResetToken).not.toHaveBeenCalled();
+  });
+
+  it('forgot password: stores reset token and returns it in non-production', async () => {
+    usersService.findByEmail.mockResolvedValue(baseUser);
+    usersService.setPasswordResetToken.mockResolvedValue(undefined);
+
+    const result = await authService.forgotPassword({ email: baseUser.email });
+
+    expect(result.message).toBe(
+      'Si el email existe, recibiras instrucciones para restablecer tu contrasena.',
+    );
+    expect(result).toHaveProperty('reset_token');
+    const resetToken = (result as any).reset_token;
+    expect(typeof resetToken).toBe('string');
+    expect((resetToken as string).length).toBeGreaterThan(10);
+    expect(usersService.setPasswordResetToken).toHaveBeenCalledWith(
+      baseUser.id,
+      expect.any(String),
+      expect.any(Date),
+    );
+  });
+
+  it('reset password: updates password and clears reset token when token is valid', async () => {
+    usersService.findByEmail.mockResolvedValue(baseUser);
+    usersService.validatePasswordResetToken.mockResolvedValue(true);
+    usersService.updatePassword.mockResolvedValue(undefined);
+    usersService.clearPasswordResetToken.mockResolvedValue(undefined);
+
+    const result = await authService.resetPassword({
+      email: baseUser.email,
+      reset_token: 'valid-reset-token',
+      new_password: 'new-password-123',
+    });
+
+    expect(result).toEqual({ message: 'Password updated successfully' });
+    expect(usersService.updatePassword).toHaveBeenCalledWith(baseUser.id, 'new-password-123');
+    expect(usersService.clearPasswordResetToken).toHaveBeenCalledWith(baseUser.id);
+  });
+
+  it('reset password: rejects invalid token', async () => {
+    usersService.findByEmail.mockResolvedValue(baseUser);
+    usersService.validatePasswordResetToken.mockResolvedValue(false);
+
+    await expect(
+      authService.resetPassword({
+        email: baseUser.email,
+        reset_token: 'invalid-token',
+        new_password: 'new-password-123',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

@@ -18,12 +18,14 @@ Asignación automática: primer proveedor que acepta gana (first accept wins).
 6. Matching = filtro por district_id (FK, no string libre)
 7. Distritos son un catálogo cerrado (tabla districts). El cliente elige de un dropdown.
 
-## Modelo de datos (5 tablas)
+## Modelo de datos (base actual: 5 tablas)
 - District (catálogo normalizado de distritos)
 - User (roles: CLIENT, PROVIDER, ADMIN)
 - ServiceRequest (estados: PENDING → ACCEPTED → IN_PROGRESS → COMPLETED | CANCELLED | EXPIRED)
 - PricingRule (precio por hora por distrito)
 - Rating (1-5 estrellas, solo cliente califica después de COMPLETED)
+
+Nota evolutiva: el guardrail de "máximo 5 tablas" ya cumplió su propósito inicial. A partir de ahora, se pueden agregar tablas nuevas solo con justificación de UX validada en testing (por ejemplo, `user_addresses`).
 
 ## Transiciones de estado permitidas
 - PENDING → ACCEPTED | EXPIRED | CANCELLED
@@ -60,7 +62,7 @@ Asignación automática: primer proveedor que acepta gana (first accept wins).
 ## NO hacer (guardrails MVP)
 - NO agregar WebSockets (polling es suficiente)
 - NO agregar PostGIS (matching por district_id)
-- NO crear más de 5 tablas
+- NO agregar tablas sin justificación de UX validada en testing
 - NO agregar message queues (RabbitMQ, Kafka)
 - NO crear abstracciones tipo "ServiceType" (solo hay limpieza)
 - NO implementar pagos online (efectivo/registro manual)

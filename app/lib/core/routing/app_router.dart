@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
+import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/state/auth_notifier.dart';
 import '../../features/auth/state/auth_state.dart';
 import '../../features/admin/presentation/admin_home_screen.dart';
@@ -40,6 +42,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => ResetPasswordScreen(
+          prefillEmail: state.uri.queryParameters['email'],
+          prefillToken: state.uri.queryParameters['token'],
+        ),
       ),
       GoRoute(
         path: '/legal/terms',
@@ -106,7 +119,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authNotifierProvider);
       final location = state.matchedLocation;
-      final isAuthRoute = location == '/login' || location == '/register';
+      final isAuthRoute = location == '/login' ||
+          location == '/register' ||
+          location == '/forgot-password' ||
+          location == '/reset-password';
       final isLegalRoute = location.startsWith('/legal/');
 
       if (authState.status == AuthStatus.loading) {

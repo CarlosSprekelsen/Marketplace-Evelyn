@@ -35,9 +35,11 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _tokenStorage.getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+    if (!_isPublicAuthRoute(options)) {
+      final token = await _tokenStorage.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
     }
 
     handler.next(options);
@@ -52,8 +54,9 @@ class AuthInterceptor extends Interceptor {
     final isUnauthorized = err.response?.statusCode == 401;
     final alreadyRetried = request.extra['retried'] == true;
     final isRefreshRequest = request.path.endsWith('/auth/refresh');
+    final isPublicAuthRequest = _isPublicAuthRoute(request);
 
-    if (!isUnauthorized || alreadyRetried || isRefreshRequest) {
+    if (!isUnauthorized || alreadyRetried || isRefreshRequest || isPublicAuthRequest) {
       handler.next(err);
       return;
     }
@@ -123,5 +126,14 @@ class AuthInterceptor extends Interceptor {
   Future<void> _handleSessionExpired() async {
     await _tokenStorage.clearTokens();
     _eventBus.emit(AuthEvent.sessionExpired);
+  }
+
+  bool _isPublicAuthRoute(RequestOptions options) {
+    final path = options.path.toLowerCase();
+    return path.endsWith('/auth/login') ||
+        path.endsWith('/auth/register') ||
+        path.endsWith('/auth/refresh') ||
+        path.endsWith('/auth/forgot-password') ||
+        path.endsWith('/auth/reset-password');
   }
 }

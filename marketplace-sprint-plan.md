@@ -697,7 +697,7 @@ Tarea 4.3: Flujo completo en Flutter
 
 ---
 
-## Sprint 5 — Hardening + Deploy a VPS (3-4 días)
+## Sprint 5 [DONE]— Hardening + Deploy a VPS (3-4 días)
 
 **Objetivo:** Backend en producción con HTTPS. App distribuible como APK.
 

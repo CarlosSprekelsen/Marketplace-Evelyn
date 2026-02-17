@@ -16,6 +16,8 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetAvailabilityDto } from './dto/set-availability.dto';
 import { SetFcmTokenDto } from './dto/set-fcm-token.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -63,6 +65,28 @@ export class AuthController {
     return this.authService.refresh(req.user.userId, req.user.refreshToken);
   }
 
+  @Post('forgot-password')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request a password reset token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset instructions accepted (always generic to prevent user enumeration)',
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password using token from forgot-password flow' })
+  @ApiResponse({ status: 200, description: 'Password updated successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired reset token' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
@@ -92,7 +116,13 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Availability updated' })
   async setAvailability(@Request() req, @Body() dto: SetAvailabilityDto) {
     const user = await this.usersService.setAvailability(req.user.id, dto.is_available);
-    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...safeUser
+    } = user;
     return safeUser;
   }
 
@@ -103,7 +133,13 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'FCM token updated' })
   async setFcmToken(@Request() req, @Body() dto: SetFcmTokenDto) {
     const user = await this.usersService.setFcmToken(req.user.id, dto.fcm_token);
-    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...safeUser
+    } = user;
     return safeUser;
   }
 
@@ -114,7 +150,13 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'FCM token cleared' })
   async clearFcmToken(@Request() req) {
     const user = await this.usersService.setFcmToken(req.user.id, null);
-    const { password_hash, refresh_token_hash, ...safeUser } = user;
+    const {
+      password_hash,
+      refresh_token_hash,
+      password_reset_token_hash,
+      password_reset_expires_at,
+      ...safeUser
+    } = user;
     return safeUser;
   }
 

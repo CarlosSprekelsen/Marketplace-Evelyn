@@ -65,6 +65,42 @@ class AuthRepository {
     return auth;
   }
 
+  Future<Map<String, dynamic>> forgotPassword({
+    required String email,
+  }) async {
+    final response = await _dio.post(
+      '/auth/forgot-password',
+      data: {
+        'email': email,
+      },
+    );
+
+    final data = response.data;
+    if (data is! Map) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/auth/forgot-password'),
+        message: 'Unexpected forgot-password response format',
+      );
+    }
+
+    return data.cast<String, dynamic>();
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    await _dio.post(
+      '/auth/reset-password',
+      data: {
+        'email': email,
+        'reset_token': resetToken,
+        'new_password': newPassword,
+      },
+    );
+  }
+
   Future<RefreshResponse> refresh({String? refreshToken}) async {
     final token = refreshToken ?? await _tokenStorage.getRefreshToken();
     if (token == null || token.isEmpty) {

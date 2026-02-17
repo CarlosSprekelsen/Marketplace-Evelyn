@@ -108,6 +108,12 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   refresh_token_hash: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  password_reset_token_hash: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  password_reset_expires_at: Date | null;
+
   @ApiProperty({
     description: 'Creation timestamp',
     example: '2026-02-13T10:00:00.000Z',
