@@ -13,9 +13,12 @@ import { PushNotificationsService } from '../notifications/push-notifications.se
 import { UserAddress } from '../user-addresses/user-address.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ServiceRequest, District, Rating, User, UserAddress]), PricingModule],
+  imports: [
+    TypeOrmModule.forFeature([ServiceRequest, District, Rating, User, UserAddress]),
+    PricingModule,
+  ],
   providers: [ServiceRequestsService, ExpirationService, PushNotificationsService],
   controllers: [ServiceRequestsController, ProvidersRatingsController],
-  exports: [ServiceRequestsService],
+  exports: [ServiceRequestsService, PushNotificationsService],
 })
 export class ServiceRequestsModule {}

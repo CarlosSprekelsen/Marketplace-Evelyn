@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../shared/models/service_request_model.dart';
 import '../../../shared/utils/date_formatter.dart';
@@ -23,9 +24,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
     final jobsAsync = ref.watch(assignedJobsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mis Trabajos'),
-      ),
+      appBar: AppBar(title: const Text('Mis Trabajos')),
       body: Column(
         children: [
           Padding(
@@ -56,7 +55,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
           Expanded(
             child: jobsAsync.when(
               data: (jobs) {
-                final filtered = jobs.where((job) => job.status == _selected).toList(growable: false);
+                final filtered = jobs
+                    .where((job) => job.status == _selected)
+                    .toList(growable: false);
                 if (filtered.isEmpty) {
                   return const Center(
                     child: Text('No hay trabajos en este estado'),
@@ -80,7 +81,8 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      job.district?.name ?? 'Distrito ${job.districtId}',
+                                      job.district?.name ??
+                                          'Distrito ${job.districtId}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -91,7 +93,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text('Fecha: ${formatDateTime(job.scheduledAt)}'),
-                              Text('Precio: ${job.priceTotal.toStringAsFixed(2)}'),
+                              Text(
+                                'Precio: ${job.priceTotal.toStringAsFixed(2)}',
+                              ),
                               Text('Horas: ${job.hoursRequested}'),
                               if (job.client != null) ...[
                                 const SizedBox(height: 4),
@@ -99,11 +103,43 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                                 Row(
                                   children: [
                                     Text('Tel: ${job.client!.phone}'),
-                                    PhoneActionButtons(phone: job.client!.phone),
+                                    PhoneActionButtons(
+                                      phone: job.client!.phone,
+                                    ),
                                   ],
                                 ),
                               ],
-                              if (job.status == ServiceRequestStatus.accepted) ...[
+                              const SizedBox(height: 4),
+                              Text('Direccion: ${job.fullAddress}'),
+                              if (job.status == ServiceRequestStatus.accepted ||
+                                  job.status ==
+                                      ServiceRequestStatus.inProgress) ...[
+                                const SizedBox(height: 8),
+                                if (job.addressLatitude != null &&
+                                    job.addressLongitude != null)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => _navigateTo(
+                                        latitude: job.addressLatitude!,
+                                        longitude: job.addressLongitude!,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.navigation_outlined,
+                                      ),
+                                      label: const Text('Navegar'),
+                                    ),
+                                  )
+                                else
+                                  Text(
+                                    'Ubicacion no configurada por el cliente',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                              ],
+                              if (job.status ==
+                                  ServiceRequestStatus.accepted) ...[
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
@@ -135,7 +171,8 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                                   ],
                                 ),
                               ],
-                              if (job.status == ServiceRequestStatus.inProgress) ...[
+                              if (job.status ==
+                                  ServiceRequestStatus.inProgress) ...[
                                 const SizedBox(height: 12),
                                 SizedBox(
                                   width: double.infinity,
@@ -214,9 +251,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Servicio iniciado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Servicio iniciado')));
       await _refreshJobs();
       if (!mounted) {
         return;
@@ -228,9 +265,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mapProviderError(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mapProviderError(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -262,9 +299,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Servicio completado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Servicio completado')));
       await _refreshJobs();
       if (!mounted) {
         return;
@@ -276,9 +313,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mapProviderError(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mapProviderError(error))));
     } finally {
       if (mounted) {
         setState(() {
@@ -306,23 +343,56 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitud cancelada')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Solicitud cancelada')));
       await _refreshJobs();
     } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mapProviderError(error))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mapProviderError(error))));
     } finally {
       if (mounted) {
         setState(() {
           _activeJobId = null;
           _activeAction = null;
         });
+      }
+    }
+  }
+
+  Future<void> _navigateTo({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final wazeUri = Uri.parse('waze://?ll=$latitude,$longitude&navigate=yes');
+    final mapsUri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude',
+    );
+
+    try {
+      if (await canLaunchUrl(wazeUri)) {
+        await launchUrl(wazeUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+
+      final openedMaps = await launchUrl(
+        mapsUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!openedMaps && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir la navegacion')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir la navegacion')),
+        );
       }
     }
   }

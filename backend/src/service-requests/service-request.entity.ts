@@ -82,6 +82,14 @@ export class ServiceRequest {
   @Column({ type: 'varchar', length: 300, nullable: true })
   address_reference: string | null;
 
+  @ApiProperty({ description: 'Latitude of service address', required: false, example: 25.2048 })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  address_latitude: number | null;
+
+  @ApiProperty({ description: 'Longitude of service address', required: false, example: 55.2708 })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  address_longitude: number | null;
+
   @ApiProperty({
     description: 'Hours requested (1-8)',
     example: 3,

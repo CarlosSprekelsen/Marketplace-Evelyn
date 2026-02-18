@@ -27,21 +27,20 @@ class AddressesRepository {
     double? longitude,
     bool isDefault = false,
   }) async {
-    final response = await _dio.post(
-      '/user-addresses',
-      data: {
-        'label': label,
-        if (labelCustom != null) 'label_custom': labelCustom,
-        'district_id': districtId,
-        'address_street': addressStreet,
-        'address_number': addressNumber,
-        if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
-        if (addressReference != null) 'address_reference': addressReference,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-        'is_default': isDefault,
-      },
-    );
+    final payload = <String, dynamic>{
+      'label': label,
+      'label_custom': labelCustom,
+      'district_id': districtId,
+      'address_street': addressStreet,
+      'address_number': addressNumber,
+      'address_floor_apt': addressFloorApt,
+      'address_reference': addressReference,
+      'latitude': latitude,
+      'longitude': longitude,
+      'is_default': isDefault,
+    }..removeWhere((key, value) => value == null);
+
+    final response = await _dio.post('/user-addresses', data: payload);
     return UserAddress.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -54,21 +53,24 @@ class AddressesRepository {
     String? addressNumber,
     String? addressFloorApt,
     String? addressReference,
+    double? latitude,
+    double? longitude,
     bool? isDefault,
   }) async {
-    final response = await _dio.put(
-      '/user-addresses/$id',
-      data: {
-        if (label != null) 'label': label,
-        if (labelCustom != null) 'label_custom': labelCustom,
-        if (districtId != null) 'district_id': districtId,
-        if (addressStreet != null) 'address_street': addressStreet,
-        if (addressNumber != null) 'address_number': addressNumber,
-        if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
-        if (addressReference != null) 'address_reference': addressReference,
-        if (isDefault != null) 'is_default': isDefault,
-      },
-    );
+    final payload = <String, dynamic>{
+      'label': label,
+      'label_custom': labelCustom,
+      'district_id': districtId,
+      'address_street': addressStreet,
+      'address_number': addressNumber,
+      'address_floor_apt': addressFloorApt,
+      'address_reference': addressReference,
+      'latitude': latitude,
+      'longitude': longitude,
+      'is_default': isDefault,
+    }..removeWhere((key, value) => value == null);
+
+    final response = await _dio.put('/user-addresses/$id', data: payload);
     return UserAddress.fromJson(response.data as Map<String, dynamic>);
   }
 

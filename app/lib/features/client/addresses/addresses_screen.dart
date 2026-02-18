@@ -1,10 +1,25 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../shared/models/user_address.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../state/client_requests_providers.dart';
 import 'addresses_provider.dart';
+
+const double _defaultLatitude = 25.2048;
+const double _defaultLongitude = 55.2708;
+const String _placeholderGoogleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+const String _staticMapsApiKey = String.fromEnvironment(
+  'GOOGLE_MAPS_API_KEY',
+  defaultValue: _placeholderGoogleMapsApiKey,
+);
+
+bool get _hasStaticMapsApiKey =>
+    _staticMapsApiKey.isNotEmpty &&
+    _staticMapsApiKey != _placeholderGoogleMapsApiKey;
 
 class AddressesScreen extends ConsumerStatefulWidget {
   const AddressesScreen({super.key});
@@ -76,7 +91,10 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
     );
   }
 
-  Future<void> _showAddressForm(BuildContext context, {UserAddress? existing}) async {
+  Future<void> _showAddressForm(
+    BuildContext context, {
+    UserAddress? existing,
+  }) async {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -95,8 +113,14 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
         title: const Text('Eliminar dirección'),
         content: Text('¿Eliminar "${addr.displayLabel}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sí, eliminar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sí, eliminar'),
+          ),
         ],
       ),
     );
@@ -156,8 +180,8 @@ class _AddressCard extends StatelessWidget {
                   address.label == AddressLabel.casa
                       ? Icons.home
                       : address.label == AddressLabel.oficina
-                          ? Icons.business
-                          : Icons.place,
+                      ? Icons.business
+                      : Icons.place,
                   size: 24,
                   color: Colors.blue,
                 ),
@@ -165,19 +189,28 @@ class _AddressCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     address.displayLabel,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (address.isDefault)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.shade100,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
                       'Predeterminada',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
               ],
@@ -190,6 +223,13 @@ class _AddressCard extends StatelessWidget {
               ),
             const SizedBox(height: 4),
             Text(address.fullAddress, style: const TextStyle(fontSize: 14)),
+            if (address.latitude != null && address.longitude != null) ...[
+              const SizedBox(height: 12),
+              _StaticMapThumbnail(
+                latitude: address.latitude!,
+                longitude: address.longitude!,
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -220,6 +260,74 @@ class _AddressCard extends StatelessWidget {
   }
 }
 
+class _StaticMapThumbnail extends StatelessWidget {
+  const _StaticMapThumbnail({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasStaticMapsApiKey) {
+      return const _MapThumbnailFallback(
+        message:
+            'Mapa no disponible. Configura GOOGLE_MAPS_API_KEY para ver miniaturas.',
+      );
+    }
+
+    final center =
+        '${latitude.toStringAsFixed(6)},${longitude.toStringAsFixed(6)}';
+    final uri = Uri.https('maps.googleapis.com', '/maps/api/staticmap', {
+      'center': center,
+      'zoom': '15',
+      'size': '300x150',
+      'markers': center,
+      'key': _staticMapsApiKey,
+    });
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        uri.toString(),
+        width: double.infinity,
+        height: 150,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const _MapThumbnailFallback(
+            message: 'No se pudo cargar el mapa estático.',
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MapThumbnailFallback extends StatelessWidget {
+  const _MapThumbnailFallback({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 150,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: Colors.grey.shade700),
+      ),
+    );
+  }
+}
+
 class _AddressFormSheet extends ConsumerStatefulWidget {
   const _AddressFormSheet({this.existing});
   final UserAddress? existing;
@@ -237,6 +345,8 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
   late final TextEditingController _floorAptCtrl;
   late final TextEditingController _referenceCtrl;
   String? _selectedDistrictId;
+  late double _latitude;
+  late double _longitude;
   bool _isDefault = false;
   bool _saving = false;
 
@@ -251,6 +361,8 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
     _floorAptCtrl = TextEditingController(text: e?.addressFloorApt ?? '');
     _referenceCtrl = TextEditingController(text: e?.addressReference ?? '');
     _selectedDistrictId = e?.districtId;
+    _latitude = e?.latitude ?? _defaultLatitude;
+    _longitude = e?.longitude ?? _defaultLongitude;
     _isDefault = e?.isDefault ?? false;
   }
 
@@ -285,17 +397,35 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
             children: [
               Text(
                 isEditing ? 'Editar dirección' : 'Nueva dirección',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               // Label selector
-              const Text('Etiqueta', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Etiqueta',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               SegmentedButton<AddressLabel>(
                 segments: const [
-                  ButtonSegment(value: AddressLabel.casa, label: Text('Casa'), icon: Icon(Icons.home)),
-                  ButtonSegment(value: AddressLabel.oficina, label: Text('Oficina'), icon: Icon(Icons.business)),
-                  ButtonSegment(value: AddressLabel.otro, label: Text('Otro'), icon: Icon(Icons.place)),
+                  ButtonSegment(
+                    value: AddressLabel.casa,
+                    label: Text('Casa'),
+                    icon: Icon(Icons.home),
+                  ),
+                  ButtonSegment(
+                    value: AddressLabel.oficina,
+                    label: Text('Oficina'),
+                    icon: Icon(Icons.business),
+                  ),
+                  ButtonSegment(
+                    value: AddressLabel.otro,
+                    label: Text('Otro'),
+                    icon: Icon(Icons.place),
+                  ),
                 ],
                 selected: {_label},
                 onSelectionChanged: (set) => setState(() => _label = set.first),
@@ -310,7 +440,8 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                     border: OutlineInputBorder(),
                   ),
                   maxLength: 50,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Requerido' : null,
                 ),
               ],
               const SizedBox(height: 16),
@@ -321,15 +452,19 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                     labelText: 'Distrito',
                     border: OutlineInputBorder(),
                   ),
-                  value: _selectedDistrictId,
+                  initialValue: _selectedDistrictId,
                   items: districts
-                      .map((d) => DropdownMenuItem(value: d.id, child: Text(d.name)))
+                      .map(
+                        (d) =>
+                            DropdownMenuItem(value: d.id, child: Text(d.name)),
+                      )
                       .toList(),
                   onChanged: (v) => setState(() => _selectedDistrictId = v),
                   validator: (v) => v == null ? 'Selecciona un distrito' : null,
                 ),
                 loading: () => const LinearProgressIndicator(),
-                error: (_, __) => const Text('Error cargando distritos'),
+                error: (error, stackTrace) =>
+                    const Text('Error cargando distritos'),
               ),
               const SizedBox(height: 16),
               // Address fields
@@ -340,7 +475,8 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                   border: OutlineInputBorder(),
                 ),
                 maxLength: 200,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Requerido' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -350,7 +486,8 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                   border: OutlineInputBorder(),
                 ),
                 maxLength: 50,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Requerido' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -372,6 +509,58 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                 maxLength: 300,
               ),
               const SizedBox(height: 12),
+              const Text(
+                'Arrastra el pin a la ubicación exacta',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 200,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(_latitude, _longitude),
+                      zoom: 15,
+                    ),
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('address_pin'),
+                        position: LatLng(_latitude, _longitude),
+                        draggable: true,
+                        onDragEnd: (position) {
+                          setState(() {
+                            _latitude = position.latitude;
+                            _longitude = position.longitude;
+                          });
+                        },
+                      ),
+                    },
+                    onTap: (position) {
+                      setState(() {
+                        _latitude = position.latitude;
+                        _longitude = position.longitude;
+                      });
+                    },
+                    mapToolbarEnabled: false,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    gestureRecognizers:
+                        const <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<OneSequenceGestureRecognizer>(
+                        EagerGestureRecognizer.new,
+                      ),
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Lat: ${_latitude.toStringAsFixed(6)} · '
+                'Lng: ${_longitude.toStringAsFixed(6)}',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+              const SizedBox(height: 8),
               SwitchListTile(
                 title: const Text('Dirección predeterminada'),
                 value: _isDefault,
@@ -408,23 +597,39 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
         await repo.updateAddress(
           id: widget.existing!.id,
           label: _label.value,
-          labelCustom: _label == AddressLabel.otro ? _labelCustomCtrl.text.trim() : null,
+          labelCustom: _label == AddressLabel.otro
+              ? _labelCustomCtrl.text.trim()
+              : null,
           districtId: _selectedDistrictId,
           addressStreet: _streetCtrl.text.trim(),
           addressNumber: _numberCtrl.text.trim(),
-          addressFloorApt: _floorAptCtrl.text.trim().isNotEmpty ? _floorAptCtrl.text.trim() : null,
-          addressReference: _referenceCtrl.text.trim().isNotEmpty ? _referenceCtrl.text.trim() : null,
+          addressFloorApt: _floorAptCtrl.text.trim().isNotEmpty
+              ? _floorAptCtrl.text.trim()
+              : null,
+          addressReference: _referenceCtrl.text.trim().isNotEmpty
+              ? _referenceCtrl.text.trim()
+              : null,
+          latitude: _latitude,
+          longitude: _longitude,
           isDefault: _isDefault,
         );
       } else {
         await repo.createAddress(
           label: _label.value,
-          labelCustom: _label == AddressLabel.otro ? _labelCustomCtrl.text.trim() : null,
+          labelCustom: _label == AddressLabel.otro
+              ? _labelCustomCtrl.text.trim()
+              : null,
           districtId: _selectedDistrictId!,
           addressStreet: _streetCtrl.text.trim(),
           addressNumber: _numberCtrl.text.trim(),
-          addressFloorApt: _floorAptCtrl.text.trim().isNotEmpty ? _floorAptCtrl.text.trim() : null,
-          addressReference: _referenceCtrl.text.trim().isNotEmpty ? _referenceCtrl.text.trim() : null,
+          addressFloorApt: _floorAptCtrl.text.trim().isNotEmpty
+              ? _floorAptCtrl.text.trim()
+              : null,
+          addressReference: _referenceCtrl.text.trim().isNotEmpty
+              ? _referenceCtrl.text.trim()
+              : null,
+          latitude: _latitude,
+          longitude: _longitude,
           isDefault: _isDefault,
         );
       }

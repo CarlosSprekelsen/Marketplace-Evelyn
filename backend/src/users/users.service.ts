@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
+import { PushNotificationsService } from '../notifications/push-notifications.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private readonly pushNotificationsService: PushNotificationsService,
   ) {}
 
   async findById(id: string): Promise<User | null> {
@@ -182,6 +184,19 @@ export class UsersService {
     if (!user) {
       throw new Error('User not found after verification update');
     }
+
+    if (user.role === UserRole.PROVIDER) {
+      await this.pushNotificationsService.sendToTokens([user.fcm_token], {
+        title: isVerified ? 'Cuenta verificada' : 'Verificacion revocada',
+        body: isVerified
+          ? 'Tu cuenta ha sido aprobada. Ya puedes ver y aceptar trabajos disponibles.'
+          : 'Tu verificacion ha sido revocada. Contacta soporte para mas informacion.',
+        data: {
+          type: isVerified ? 'ACCOUNT_VERIFIED' : 'ACCOUNT_UNVERIFIED',
+        },
+      });
+    }
+
     return user;
   }
 

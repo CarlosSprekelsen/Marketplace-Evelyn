@@ -27,6 +27,9 @@ dependencies:
   # URL launcher (calls, WhatsApp)
   url_launcher: ^6.2.5
 
+  # Maps
+  google_maps_flutter: ^2.10.0
+
   # Routing
   go_router: ^17.1.0
 

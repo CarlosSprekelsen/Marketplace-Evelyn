@@ -43,6 +43,8 @@ export class ServiceRequestsService {
     let addressNumber = dto.address_number;
     let addressFloorApt = dto.address_floor_apt ?? null;
     let addressReference = dto.address_reference ?? null;
+    let addressLatitude: number | null = null;
+    let addressLongitude: number | null = null;
 
     if (dto.address_id) {
       const savedAddress = await this.userAddressesRepository.findOne({
@@ -58,6 +60,8 @@ export class ServiceRequestsService {
       addressNumber = savedAddress.address_number;
       addressFloorApt = savedAddress.address_floor_apt;
       addressReference = savedAddress.address_reference;
+      addressLatitude = this.toNullableNumber(savedAddress.latitude);
+      addressLongitude = this.toNullableNumber(savedAddress.longitude);
     } else if (!addressStreet || !addressNumber) {
       throw new BadRequestException(
         'Either address_id or address_street + address_number are required',
@@ -90,6 +94,8 @@ export class ServiceRequestsService {
       address_number: addressNumber,
       address_floor_apt: addressFloorApt,
       address_reference: addressReference,
+      address_latitude: addressLatitude,
+      address_longitude: addressLongitude,
       hours_requested: dto.hours_requested,
       price_total: quote.price_total,
       scheduled_at: scheduledAt,
@@ -209,7 +215,7 @@ export class ServiceRequestsService {
           ServiceRequestStatus.COMPLETED,
         ]),
       },
-      relations: ['district'],
+      relations: ['district', 'client'],
       order: { created_at: 'DESC' },
     });
   }
@@ -548,6 +554,16 @@ export class ServiceRequestsService {
   }
 
   private toNumber(value: number | string): number {
+    if (typeof value === 'number') {
+      return value;
+    }
+    return Number(value);
+  }
+
+  private toNullableNumber(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
     if (typeof value === 'number') {
       return value;
     }

@@ -16,10 +16,7 @@ class ClientRequestsRepository {
   }) async {
     final response = await _dio.get(
       '/pricing/quote',
-      queryParameters: {
-        'district_id': districtId,
-        'hours': hours,
-      },
+      queryParameters: {'district_id': districtId, 'hours': hours},
     );
     return PriceQuote.fromJson(response.data as Map<String, dynamic>);
   }
@@ -34,26 +31,24 @@ class ClientRequestsRepository {
     required int hoursRequested,
     required DateTime scheduledAtLocal,
   }) async {
-    final response = await _dio.post(
-      '/service-requests',
-      data: {
-        'district_id': districtId,
-        if (addressId != null) 'address_id': addressId,
-        if (addressStreet != null) 'address_street': addressStreet,
-        if (addressNumber != null) 'address_number': addressNumber,
-        if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
-        if (addressReference != null) 'address_reference': addressReference,
-        'hours_requested': hoursRequested,
-        'scheduled_at': scheduledAtLocal.toUtc().toIso8601String(),
-      },
-    );
+    final payload = <String, dynamic>{
+      'district_id': districtId,
+      'address_id': addressId,
+      'address_street': addressStreet,
+      'address_number': addressNumber,
+      'address_floor_apt': addressFloorApt,
+      'address_reference': addressReference,
+      'hours_requested': hoursRequested,
+      'scheduled_at': scheduledAtLocal.toUtc().toIso8601String(),
+    }..removeWhere((key, value) => value == null);
+
+    final response = await _dio.post('/service-requests', data: payload);
     return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<List<ServiceRequestModel>> getMyRequests({String? status}) async {
-    final queryParameters = <String, dynamic>{
-      'status': status,
-    }..removeWhere((_, value) => value == null);
+    final queryParameters = <String, dynamic>{'status': status}
+      ..removeWhere((_, value) => value == null);
 
     final response = await _dio.get(
       '/service-requests/mine',
@@ -61,7 +56,9 @@ class ClientRequestsRepository {
     );
     final data = response.data as List<dynamic>;
     return data
-        .map((item) => ServiceRequestModel.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) => ServiceRequestModel.fromJson(item as Map<String, dynamic>),
+        )
         .toList(growable: false);
   }
 
@@ -90,14 +87,17 @@ class ClientRequestsRepository {
       '/service-requests/$requestId/rating',
       data: {
         'stars': stars,
-        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
       },
     );
   }
 
   Future<ProviderRatingsSummary> getProviderRatings(String providerId) async {
     final response = await _dio.get('/providers/$providerId/ratings');
-    return ProviderRatingsSummary.fromJson(response.data as Map<String, dynamic>);
+    return ProviderRatingsSummary.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   // --- Recurring requests ---
@@ -113,20 +113,19 @@ class ClientRequestsRepository {
     required int dayOfWeek,
     required String timeOfDay,
   }) async {
-    final response = await _dio.post(
-      '/recurring-requests',
-      data: {
-        'district_id': districtId,
-        if (addressId != null) 'address_id': addressId,
-        if (addressStreet != null) 'address_street': addressStreet,
-        if (addressNumber != null) 'address_number': addressNumber,
-        if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
-        if (addressReference != null) 'address_reference': addressReference,
-        'hours_requested': hoursRequested,
-        'day_of_week': dayOfWeek,
-        'time_of_day': timeOfDay,
-      },
-    );
+    final payload = <String, dynamic>{
+      'district_id': districtId,
+      'address_id': addressId,
+      'address_street': addressStreet,
+      'address_number': addressNumber,
+      'address_floor_apt': addressFloorApt,
+      'address_reference': addressReference,
+      'hours_requested': hoursRequested,
+      'day_of_week': dayOfWeek,
+      'time_of_day': timeOfDay,
+    }..removeWhere((key, value) => value == null);
+
+    final response = await _dio.post('/recurring-requests', data: payload);
     return RecurringRequest.fromJson(response.data as Map<String, dynamic>);
   }
 

@@ -128,8 +128,27 @@ export class RecurringRequestsService {
           continue;
         }
 
+        const matchingAddressWhere: Record<string, string> = {
+          user_id: recurring.client_id,
+          district_id: recurring.district_id,
+          address_street: recurring.address_street,
+          address_number: recurring.address_number,
+        };
+        if (recurring.address_floor_apt) {
+          matchingAddressWhere.address_floor_apt = recurring.address_floor_apt;
+        }
+        if (recurring.address_reference) {
+          matchingAddressWhere.address_reference = recurring.address_reference;
+        }
+
+        const matchingAddress = await this.userAddressesRepository.findOne({
+          where: matchingAddressWhere as any,
+          order: { updated_at: 'DESC' },
+        });
+
         await this.serviceRequestsService.create(client, {
           district_id: recurring.district_id,
+          address_id: matchingAddress?.id,
           address_street: recurring.address_street,
           address_number: recurring.address_number,
           address_floor_apt: recurring.address_floor_apt ?? undefined,

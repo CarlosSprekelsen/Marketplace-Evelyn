@@ -38,29 +38,31 @@ class AddressPickerWidget extends ConsumerWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                ...addresses.map((addr) => ChoiceChip(
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            addr.label == AddressLabel.casa
-                                ? Icons.home
-                                : addr.label == AddressLabel.oficina
-                                    ? Icons.business
-                                    : Icons.place,
-                            size: 16,
-                          ),
+                ...addresses.map(
+                  (addr) => ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          addr.label == AddressLabel.casa
+                              ? Icons.home
+                              : addr.label == AddressLabel.oficina
+                              ? Icons.business
+                              : Icons.place,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(addr.displayLabel),
+                        if (addr.isDefault) ...[
                           const SizedBox(width: 4),
-                          Text(addr.displayLabel),
-                          if (addr.isDefault) ...[
-                            const SizedBox(width: 4),
-                            const Icon(Icons.star, size: 14, color: Colors.amber),
-                          ],
+                          const Icon(Icons.star, size: 14, color: Colors.amber),
                         ],
-                      ),
-                      selected: selectedAddressId == addr.id,
-                      onSelected: (_) => onAddressSelected(addr),
-                    )),
+                      ],
+                    ),
+                    selected: selectedAddressId == addr.id,
+                    onSelected: (_) => onAddressSelected(addr),
+                  ),
+                ),
                 ActionChip(
                   avatar: const Icon(Icons.add, size: 18),
                   label: const Text('Nueva'),
@@ -76,7 +78,7 @@ class AddressPickerWidget extends ConsumerWidget {
         padding: EdgeInsets.symmetric(vertical: 8),
         child: LinearProgressIndicator(),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
     );
   }
 }

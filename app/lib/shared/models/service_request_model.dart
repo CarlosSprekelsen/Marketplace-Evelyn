@@ -30,6 +30,8 @@ class ServiceRequestModel {
     required this.addressNumber,
     this.addressFloorApt,
     this.addressReference,
+    this.addressLatitude,
+    this.addressLongitude,
     required this.hoursRequested,
     required this.priceTotal,
     required this.scheduledAt,
@@ -55,6 +57,8 @@ class ServiceRequestModel {
   final String addressNumber;
   final String? addressFloorApt;
   final String? addressReference;
+  final double? addressLatitude;
+  final double? addressLongitude;
   final int hoursRequested;
   final double priceTotal;
   final DateTime scheduledAt;
@@ -92,6 +96,12 @@ class ServiceRequestModel {
       addressNumber: json['address_number'] as String? ?? '',
       addressFloorApt: json['address_floor_apt'] as String?,
       addressReference: json['address_reference'] as String?,
+      addressLatitude: json['address_latitude'] != null
+          ? double.tryParse(json['address_latitude'].toString())
+          : null,
+      addressLongitude: json['address_longitude'] != null
+          ? double.tryParse(json['address_longitude'].toString())
+          : null,
       hoursRequested: json['hours_requested'] as int,
       priceTotal: _toDouble(json['price_total']),
       scheduledAt: DateTime.parse(json['scheduled_at'] as String),
@@ -104,10 +114,15 @@ class ServiceRequestModel {
       completedAt: _parseDateTime(json['completed_at']),
       cancelledAt: _parseDateTime(json['cancelled_at']),
       cancellationReason: json['cancellation_reason'] as String?,
-      client: json['client'] != null ? User.fromJson(json['client'] as Map<String, dynamic>) : null,
-      provider: json['provider'] != null ? User.fromJson(json['provider'] as Map<String, dynamic>) : null,
-      district:
-          json['district'] != null ? District.fromJson(json['district'] as Map<String, dynamic>) : null,
+      client: json['client'] != null
+          ? User.fromJson(json['client'] as Map<String, dynamic>)
+          : null,
+      provider: json['provider'] != null
+          ? User.fromJson(json['provider'] as Map<String, dynamic>)
+          : null,
+      district: json['district'] != null
+          ? District.fromJson(json['district'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
