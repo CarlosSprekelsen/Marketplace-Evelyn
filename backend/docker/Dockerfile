@@ -1,5 +1,5 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+# Stage 1: Build (has ALL dependencies including dev)
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -10,8 +10,12 @@ COPY src/ src/
 
 RUN npm run build
 
-# Stage 2: Production
-FROM node:20-alpine AS production
+# Stage 2: Test (reuses builder — has jest and all dev deps)
+FROM builder AS test
+CMD ["npm", "run", "test", "--", "--runInBand"]
+
+# Stage 3: Production (lean — no dev deps)
+FROM node:22-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
