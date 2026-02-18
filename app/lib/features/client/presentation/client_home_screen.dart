@@ -48,6 +48,12 @@ class ClientHomeScreen extends ConsumerWidget {
               icon: const Icon(Icons.repeat),
               label: const Text('Solicitudes Recurrentes'),
             ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => context.push('/client/addresses'),
+              icon: const Icon(Icons.location_on),
+              label: const Text('Mis Direcciones'),
+            ),
           ],
         ),
       ),

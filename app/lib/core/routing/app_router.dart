@@ -20,6 +20,7 @@ import '../../features/provider/my_jobs/my_jobs_screen.dart';
 import '../../features/provider/presentation/provider_home_screen.dart';
 import '../../features/client/recurring/recurring_form_screen.dart';
 import '../../features/client/recurring/my_recurring_screen.dart';
+import '../../features/client/addresses/addresses_screen.dart';
 import '../../features/legal/presentation/legal_document_screen.dart';
 import '../../shared/models/user.dart';
 
@@ -103,6 +104,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => RequestDetailScreen(
           requestId: state.pathParameters['id'] ?? '',
         ),
+      ),
+      GoRoute(
+        path: '/client/addresses',
+        builder: (context, state) => const AddressesScreen(),
       ),
       GoRoute(
         path: '/client/recurring',

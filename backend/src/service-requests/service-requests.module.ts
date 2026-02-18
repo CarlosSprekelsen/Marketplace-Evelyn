@@ -10,9 +10,10 @@ import { Rating } from '../ratings/rating.entity';
 import { ProvidersRatingsController } from './providers-ratings.controller';
 import { User } from '../users/user.entity';
 import { PushNotificationsService } from '../notifications/push-notifications.service';
+import { UserAddress } from '../user-addresses/user-address.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ServiceRequest, District, Rating, User]), PricingModule],
+  imports: [TypeOrmModule.forFeature([ServiceRequest, District, Rating, User, UserAddress]), PricingModule],
   providers: [ServiceRequestsService, ExpirationService, PushNotificationsService],
   controllers: [ServiceRequestsController, ProvidersRatingsController],
   exports: [ServiceRequestsService],

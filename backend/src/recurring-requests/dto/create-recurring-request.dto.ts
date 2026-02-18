@@ -16,15 +16,26 @@ export class CreateRecurringRequestDto {
   @IsUUID()
   district_id: string;
 
-  @ApiProperty({ example: 'Calle 50' })
-  @IsNotEmpty()
-  @MaxLength(200)
-  address_street: string;
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+    description: 'Saved address ID. If provided, address fields are populated from it.',
+  })
+  @IsOptional()
+  @IsUUID()
+  address_id?: string;
 
-  @ApiProperty({ example: 'Edificio 5' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'Calle 50', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  address_street?: string;
+
+  @ApiProperty({ example: 'Edificio 5', required: false })
+  @IsOptional()
+  @IsString()
   @MaxLength(50)
-  address_number: string;
+  address_number?: string;
 
   @ApiProperty({ example: 'Piso 3, Apt 302', required: false })
   @IsOptional()

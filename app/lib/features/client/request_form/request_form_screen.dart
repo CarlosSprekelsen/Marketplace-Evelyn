@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/models/price_quote.dart';
 import '../../../shared/utils/date_formatter.dart';
 import '../../auth/state/auth_notifier.dart';
+import '../addresses/address_picker_widget.dart';
 import '../state/client_requests_providers.dart';
 
 class RequestFormScreen extends ConsumerStatefulWidget {
@@ -37,6 +38,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
   final _referenceController = TextEditingController();
 
   String? _districtId;
+  String? _selectedAddressId;
   int _hours = 1;
   DateTime? _scheduledAt;
   PriceQuote? _quote;
@@ -172,13 +174,39 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  AddressPickerWidget(
+                    selectedAddressId: _selectedAddressId,
+                    onAddressSelected: (addr) {
+                      setState(() {
+                        _selectedAddressId = addr.id;
+                        _districtId = addr.districtId;
+                        _streetController.text = addr.addressStreet;
+                        _numberController.text = addr.addressNumber;
+                        _floorAptController.text = addr.addressFloorApt ?? '';
+                        _referenceController.text = addr.addressReference ?? '';
+                        _quote = null;
+                      });
+                      _fetchQuoteIfReady();
+                    },
+                    onNewAddress: () {
+                      setState(() {
+                        _selectedAddressId = null;
+                        _streetController.clear();
+                        _numberController.clear();
+                        _floorAptController.clear();
+                        _referenceController.clear();
+                      });
+                    },
+                  ),
                   TextFormField(
                     controller: _streetController,
+                    readOnly: _selectedAddressId != null,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Calle / Avenida',
                     ),
                     validator: (value) {
+                      if (_selectedAddressId != null) return null;
                       if (value == null || value.trim().isEmpty) {
                         return 'Ingresa la calle o avenida';
                       }
@@ -191,11 +219,13 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _numberController,
+                    readOnly: _selectedAddressId != null,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Nº Casa / Edificio',
                     ),
                     validator: (value) {
+                      if (_selectedAddressId != null) return null;
                       if (value == null || value.trim().isEmpty) {
                         return 'Ingresa el número';
                       }
@@ -208,6 +238,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _floorAptController,
+                    readOnly: _selectedAddressId != null,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Piso / Apartamento (opcional)',
@@ -222,6 +253,7 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _referenceController,
+                    readOnly: _selectedAddressId != null,
                     maxLines: 2,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
@@ -436,14 +468,15 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
       final repo = ref.read(clientRequestsRepositoryProvider);
       final request = await repo.createRequest(
         districtId: districtId,
-        addressStreet: _streetController.text.trim(),
-        addressNumber: _numberController.text.trim(),
-        addressFloorApt: _floorAptController.text.trim().isEmpty
-            ? null
-            : _floorAptController.text.trim(),
-        addressReference: _referenceController.text.trim().isEmpty
-            ? null
-            : _referenceController.text.trim(),
+        addressId: _selectedAddressId,
+        addressStreet: _selectedAddressId == null ? _streetController.text.trim() : null,
+        addressNumber: _selectedAddressId == null ? _numberController.text.trim() : null,
+        addressFloorApt: _selectedAddressId == null && _floorAptController.text.trim().isNotEmpty
+            ? _floorAptController.text.trim()
+            : null,
+        addressReference: _selectedAddressId == null && _referenceController.text.trim().isNotEmpty
+            ? _referenceController.text.trim()
+            : null,
         hoursRequested: _hours,
         scheduledAtLocal: _scheduledAt!,
       );

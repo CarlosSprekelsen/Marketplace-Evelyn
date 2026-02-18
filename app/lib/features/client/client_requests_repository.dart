@@ -26,8 +26,9 @@ class ClientRequestsRepository {
 
   Future<ServiceRequestModel> createRequest({
     required String districtId,
-    required String addressStreet,
-    required String addressNumber,
+    String? addressId,
+    String? addressStreet,
+    String? addressNumber,
     String? addressFloorApt,
     String? addressReference,
     required int hoursRequested,
@@ -37,8 +38,9 @@ class ClientRequestsRepository {
       '/service-requests',
       data: {
         'district_id': districtId,
-        'address_street': addressStreet,
-        'address_number': addressNumber,
+        if (addressId != null) 'address_id': addressId,
+        if (addressStreet != null) 'address_street': addressStreet,
+        if (addressNumber != null) 'address_number': addressNumber,
         if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
         if (addressReference != null) 'address_reference': addressReference,
         'hours_requested': hoursRequested,
@@ -102,8 +104,9 @@ class ClientRequestsRepository {
 
   Future<RecurringRequest> createRecurringRequest({
     required String districtId,
-    required String addressStreet,
-    required String addressNumber,
+    String? addressId,
+    String? addressStreet,
+    String? addressNumber,
     String? addressFloorApt,
     String? addressReference,
     required int hoursRequested,
@@ -114,8 +117,9 @@ class ClientRequestsRepository {
       '/recurring-requests',
       data: {
         'district_id': districtId,
-        'address_street': addressStreet,
-        'address_number': addressNumber,
+        if (addressId != null) 'address_id': addressId,
+        if (addressStreet != null) 'address_street': addressStreet,
+        if (addressNumber != null) 'address_number': addressNumber,
         if (addressFloorApt != null) 'address_floor_apt': addressFloorApt,
         if (addressReference != null) 'address_reference': addressReference,
         'hours_requested': hoursRequested,

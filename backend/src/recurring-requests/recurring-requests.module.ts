@@ -7,9 +7,10 @@ import { RecurringRequestsService } from './recurring-requests.service';
 import { RecurringRequestsController } from './recurring-requests.controller';
 import { RecurringGeneratorService } from './recurring-generator.service';
 import { ServiceRequestsModule } from '../service-requests/service-requests.module';
+import { UserAddress } from '../user-addresses/user-address.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RecurringRequest, District, User]), ServiceRequestsModule],
+  imports: [TypeOrmModule.forFeature([RecurringRequest, District, User, UserAddress]), ServiceRequestsModule],
   providers: [RecurringRequestsService, RecurringGeneratorService],
   controllers: [RecurringRequestsController],
 })

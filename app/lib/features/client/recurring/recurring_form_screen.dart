@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/price_quote.dart';
 import '../../auth/state/auth_notifier.dart';
+import '../addresses/address_picker_widget.dart';
 import '../state/client_requests_providers.dart';
 
 class RecurringFormScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
   final _referenceController = TextEditingController();
 
   String? _districtId;
+  String? _selectedAddressId;
   int _hours = 1;
   int _dayOfWeek = 1; // 1=Mon
   String _timeOfDay = '10:00';
@@ -91,14 +93,40 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Address fields
+                  // Address picker + fields
+                  AddressPickerWidget(
+                    selectedAddressId: _selectedAddressId,
+                    onAddressSelected: (addr) {
+                      setState(() {
+                        _selectedAddressId = addr.id;
+                        _districtId = addr.districtId;
+                        _streetController.text = addr.addressStreet;
+                        _numberController.text = addr.addressNumber;
+                        _floorAptController.text = addr.addressFloorApt ?? '';
+                        _referenceController.text = addr.addressReference ?? '';
+                        _quote = null;
+                      });
+                      _fetchQuoteIfReady();
+                    },
+                    onNewAddress: () {
+                      setState(() {
+                        _selectedAddressId = null;
+                        _streetController.clear();
+                        _numberController.clear();
+                        _floorAptController.clear();
+                        _referenceController.clear();
+                      });
+                    },
+                  ),
                   TextFormField(
                     controller: _streetController,
+                    readOnly: _selectedAddressId != null,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Calle / Avenida',
                     ),
                     validator: (v) {
+                      if (_selectedAddressId != null) return null;
                       if (v == null || v.trim().isEmpty) return 'Ingresa la calle o avenida';
                       if (v.length > 200) return 'Máximo 200 caracteres';
                       return null;
@@ -107,11 +135,13 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _numberController,
+                    readOnly: _selectedAddressId != null,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Nº Casa / Edificio',
                     ),
                     validator: (v) {
+                      if (_selectedAddressId != null) return null;
                       if (v == null || v.trim().isEmpty) return 'Ingresa el número';
                       if (v.length > 50) return 'Máximo 50 caracteres';
                       return null;
@@ -120,6 +150,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _floorAptController,
+                    readOnly: _selectedAddressId != null,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Piso / Apartamento (opcional)',
@@ -132,6 +163,7 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _referenceController,
+                    readOnly: _selectedAddressId != null,
                     maxLines: 2,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
@@ -331,14 +363,15 @@ class _RecurringFormScreenState extends ConsumerState<RecurringFormScreen> {
       final repo = ref.read(clientRequestsRepositoryProvider);
       await repo.createRecurringRequest(
         districtId: _districtId!,
-        addressStreet: _streetController.text.trim(),
-        addressNumber: _numberController.text.trim(),
-        addressFloorApt: _floorAptController.text.trim().isEmpty
-            ? null
-            : _floorAptController.text.trim(),
-        addressReference: _referenceController.text.trim().isEmpty
-            ? null
-            : _referenceController.text.trim(),
+        addressId: _selectedAddressId,
+        addressStreet: _selectedAddressId == null ? _streetController.text.trim() : null,
+        addressNumber: _selectedAddressId == null ? _numberController.text.trim() : null,
+        addressFloorApt: _selectedAddressId == null && _floorAptController.text.trim().isNotEmpty
+            ? _floorAptController.text.trim()
+            : null,
+        addressReference: _selectedAddressId == null && _referenceController.text.trim().isNotEmpty
+            ? _referenceController.text.trim()
+            : null,
         hoursRequested: _hours,
         dayOfWeek: _dayOfWeek,
         timeOfDay: _timeOfDay,

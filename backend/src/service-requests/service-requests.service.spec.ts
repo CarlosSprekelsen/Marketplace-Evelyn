@@ -23,6 +23,7 @@ describe('ServiceRequestsService', () => {
     save: jest.Mock;
     find: jest.Mock;
   };
+  let userAddressesRepository: { findOne: jest.Mock };
   let pricingService: { getQuote: jest.Mock };
   let pushNotificationsService: { sendToTokens: jest.Mock };
 
@@ -65,6 +66,9 @@ describe('ServiceRequestsService', () => {
       save: jest.fn(async (input) => ({ id: 'rating-1', ...input })),
       find: jest.fn(),
     };
+    userAddressesRepository = {
+      findOne: jest.fn(),
+    };
     pricingService = {
       getQuote: jest.fn(),
     };
@@ -77,6 +81,7 @@ describe('ServiceRequestsService', () => {
       districtsRepository as any,
       usersRepository as any,
       ratingsRepository as any,
+      userAddressesRepository as any,
       pricingService as any,
       pushNotificationsService as any,
     );

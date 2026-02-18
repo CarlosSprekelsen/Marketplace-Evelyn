@@ -17,6 +17,7 @@ import { Rating } from '../ratings/rating.entity';
 import { CancelServiceRequestDto } from './dto/cancel-service-request.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { PushNotificationsService } from '../notifications/push-notifications.service';
+import { UserAddress } from '../user-addresses/user-address.entity';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -31,11 +32,38 @@ export class ServiceRequestsService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Rating)
     private readonly ratingsRepository: Repository<Rating>,
+    @InjectRepository(UserAddress)
+    private readonly userAddressesRepository: Repository<UserAddress>,
     private readonly pricingService: PricingService,
     private readonly pushNotificationsService: PushNotificationsService,
   ) {}
 
   async create(client: User, dto: CreateServiceRequestDto) {
+    let addressStreet = dto.address_street;
+    let addressNumber = dto.address_number;
+    let addressFloorApt = dto.address_floor_apt ?? null;
+    let addressReference = dto.address_reference ?? null;
+
+    if (dto.address_id) {
+      const savedAddress = await this.userAddressesRepository.findOne({
+        where: { id: dto.address_id },
+      });
+      if (!savedAddress) {
+        throw new BadRequestException('Saved address not found');
+      }
+      if (savedAddress.user_id !== client.id) {
+        throw new ForbiddenException('You can only use your own saved addresses');
+      }
+      addressStreet = savedAddress.address_street;
+      addressNumber = savedAddress.address_number;
+      addressFloorApt = savedAddress.address_floor_apt;
+      addressReference = savedAddress.address_reference;
+    } else if (!addressStreet || !addressNumber) {
+      throw new BadRequestException(
+        'Either address_id or address_street + address_number are required',
+      );
+    }
+
     const district = await this.districtsRepository.findOne({
       where: { id: dto.district_id, is_active: true },
     });
@@ -58,10 +86,10 @@ export class ServiceRequestsService {
     const request = this.serviceRequestsRepository.create({
       client_id: client.id,
       district_id: dto.district_id,
-      address_street: dto.address_street,
-      address_number: dto.address_number,
-      address_floor_apt: dto.address_floor_apt ?? null,
-      address_reference: dto.address_reference ?? null,
+      address_street: addressStreet,
+      address_number: addressNumber,
+      address_floor_apt: addressFloorApt,
+      address_reference: addressReference,
       hours_requested: dto.hours_requested,
       price_total: quote.price_total,
       scheduled_at: scheduledAt,

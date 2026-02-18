@@ -12,6 +12,7 @@ describe('RecurringRequestsService', () => {
   };
   let districtsRepository: { findOne: jest.Mock };
   let usersRepository: { findOne: jest.Mock };
+  let userAddressesRepository: { findOne: jest.Mock };
   let serviceRequestsService: { create: jest.Mock };
 
   beforeEach(() => {
@@ -24,12 +25,14 @@ describe('RecurringRequestsService', () => {
     };
     districtsRepository = { findOne: jest.fn() };
     usersRepository = { findOne: jest.fn() };
+    userAddressesRepository = { findOne: jest.fn() };
     serviceRequestsService = { create: jest.fn() };
 
     service = new RecurringRequestsService(
       recurringRepository as any,
       districtsRepository as any,
       usersRepository as any,
+      userAddressesRepository as any,
       serviceRequestsService as any,
     );
   });
