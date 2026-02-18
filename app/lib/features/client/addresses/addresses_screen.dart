@@ -514,46 +514,52 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 200,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(_latitude, _longitude),
-                      zoom: 15,
+              if (_hasStaticMapsApiKey)
+                SizedBox(
+                  height: 200,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(_latitude, _longitude),
+                        zoom: 15,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('address_pin'),
+                          position: LatLng(_latitude, _longitude),
+                          draggable: true,
+                          onDragEnd: (position) {
+                            setState(() {
+                              _latitude = position.latitude;
+                              _longitude = position.longitude;
+                            });
+                          },
+                        ),
+                      },
+                      onTap: (position) {
+                        setState(() {
+                          _latitude = position.latitude;
+                          _longitude = position.longitude;
+                        });
+                      },
+                      mapToolbarEnabled: false,
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: false,
+                      gestureRecognizers:
+                          const <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                          EagerGestureRecognizer.new,
+                        ),
+                      },
                     ),
-                    markers: {
-                      Marker(
-                        markerId: const MarkerId('address_pin'),
-                        position: LatLng(_latitude, _longitude),
-                        draggable: true,
-                        onDragEnd: (position) {
-                          setState(() {
-                            _latitude = position.latitude;
-                            _longitude = position.longitude;
-                          });
-                        },
-                      ),
-                    },
-                    onTap: (position) {
-                      setState(() {
-                        _latitude = position.latitude;
-                        _longitude = position.longitude;
-                      });
-                    },
-                    mapToolbarEnabled: false,
-                    myLocationButtonEnabled: false,
-                    zoomControlsEnabled: false,
-                    gestureRecognizers:
-                        const <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                        EagerGestureRecognizer.new,
-                      ),
-                    },
                   ),
+                )
+              else
+                const _MapThumbnailFallback(
+                  message:
+                      'Mapa no disponible. Configura GOOGLE_MAPS_API_KEY para habilitar el pin.',
                 ),
-              ),
               const SizedBox(height: 8),
               Text(
                 'Lat: ${_latitude.toStringAsFixed(6)} · '

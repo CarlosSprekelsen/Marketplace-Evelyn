@@ -13,6 +13,42 @@ El perfil se determina por el rol del usuario registrado.
 
 ---
 
+## Paso 0: Configurar Google Maps API Key (obligatorio para mapas)
+
+La app usa Google Maps en dos partes:
+1. Mapa interactivo en gestion de direcciones (Android Maps SDK)
+2. Miniatura estatica en cards de direccion (Static Maps API)
+
+### 0.1 Obtener una key (o recuperar una existente)
+
+1. Abrir Google Cloud Console
+2. Ir al proyecto donde ya usabas Maps (si existe), o crear uno nuevo
+3. En **APIs & Services > Enabled APIs**, habilitar:
+   - **Maps SDK for Android**
+   - **Static Maps API**
+4. En **APIs & Services > Credentials**, crear/reusar una API key
+
+### 0.2 Restricciones recomendadas
+
+- Para Android Maps SDK: restringir por Android app
+  - Package name: `com.marketplace`
+  - SHA-1/SHA-256 de tu keystore (debug o release)
+- Para Static Maps: restringir por API (Static Maps API)
+
+### 0.3 Configurar en el proyecto
+
+1. `app/android/app/src/main/AndroidManifest.xml`
+   - Reemplazar `YOUR_GOOGLE_MAPS_API_KEY` en:
+   ```xml
+   <meta-data
+       android:name="com.google.android.geo.API_KEY"
+       android:value="YOUR_GOOGLE_MAPS_API_KEY" />
+   ```
+2. Al compilar, pasar tambien:
+   - `--dart-define=GOOGLE_MAPS_API_KEY=<tu_key>`
+
+---
+
 ## Paso 1: Generar la APK de produccion
 
 En tu PC de desarrollo:
@@ -20,15 +56,25 @@ En tu PC de desarrollo:
 ```bash
 cd ~/Marketplace-Evelyn/app
 
+MAPS_KEY="PEGAR_AQUI_TU_GOOGLE_MAPS_API_KEY"
+
 # Build release APK apuntando al backend de produccion
 flutter build apk --release \
   --dart-define=API_BASE_URL=https://claudiasrv.duckdns.org \
-  --dart-define=ENV=production
+  --dart-define=ENV=production \
+  --dart-define=GOOGLE_MAPS_API_KEY="$MAPS_KEY"
+
+# Renombrar a formato de release del proyecto
+VERSION_LINE="$(awk '/^version:/{print $2}' pubspec.yaml)"
+APP_VERSION="${VERSION_LINE%%+*}"
+APP_BUILD="${VERSION_LINE##*+}"
+APK_NAME="marketplace-evelyn-v${APP_VERSION}-build${APP_BUILD}-$(date -u +%Y%m%d).apk"
+mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/$APK_NAME"
 ```
 
 La APK queda en:
 ```
-app/build/app/outputs/flutter-apk/app-release.apk
+app/build/app/outputs/flutter-apk/marketplace-evelyn-v<version>-build<build>-YYYYMMDD.apk
 ```
 
 ---
@@ -42,16 +88,18 @@ app/build/app/outputs/flutter-apk/app-release.apk
 # Verificar que el dispositivo esta conectado
 adb devices
 
+APK_PATH="$(ls -t app/build/app/outputs/flutter-apk/marketplace-evelyn-v*-build*-*.apk | head -n1)"
+
 # Instalar la APK
-adb install app/build/app/outputs/flutter-apk/app-release.apk
+adb install "$APK_PATH"
 
 # Si ya hay una version anterior instalada:
-adb install -r app/build/app/outputs/flutter-apk/app-release.apk
+adb install -r "$APK_PATH"
 ```
 
 ### Opcion B: Via transferencia de archivo
 
-1. Copiar `app-release.apk` al telefono:
+1. Copiar `marketplace-evelyn-v<version>-build<build>-YYYYMMDD.apk` al telefono:
    - Cable USB: copiar a la carpeta `Downloads` del telefono
    - O enviar por Telegram/WhatsApp a ti mismo
    - O subir a Google Drive y descargar desde el telefono
@@ -67,10 +115,11 @@ Si la APK esta en el VPS:
 
 ```bash
 # Desde tu PC, descargar del VPS
-scp marketplace@claudiasrv.duckdns.org:~/app-release.apk ~/Downloads/
+scp marketplace@claudiasrv.duckdns.org:~/Marketplace-Evelyn/app/build/app/outputs/flutter-apk/marketplace-evelyn-v*-build*-*.apk ~/Downloads/
 
 # Luego instalar con ADB
-adb install ~/Downloads/app-release.apk
+LATEST_APK="$(ls -t ~/Downloads/marketplace-evelyn-v*-build*-*.apk | head -n1)"
+adb install "$LATEST_APK"
 ```
 
 ---
@@ -135,23 +184,13 @@ Despues de registrarse, el cliente accede automaticamente a la pantalla principa
 
 ### 4.2 Activar el proveedor (OBLIGATORIO)
 
-Los proveedores recien registrados tienen `is_verified = false` y **no pueden aceptar trabajos** hasta ser verificados. Esto se hace desde el servidor:
+Los proveedores recien registrados tienen `is_verified = false` y **no pueden aceptar trabajos** hasta ser verificados.
 
-```bash
-ssh marketplace@claudiasrv.duckdns.org
-
-# Verificar al proveedor por email
-docker compose -f ~/Marketplace-Evelyn/infra/docker-compose.prod.yml \
-  --env-file ~/Marketplace-Evelyn/infra/.env.production \
-  exec -T postgres psql -U marketplace -c \
-  "UPDATE users SET is_verified = true WHERE email = 'proveedor1@test.com';"
-
-# Confirmar
-docker compose -f ~/Marketplace-Evelyn/infra/docker-compose.prod.yml \
-  --env-file ~/Marketplace-Evelyn/infra/.env.production \
-  exec -T postgres psql -U marketplace -c \
-  "SELECT email, is_verified FROM users WHERE role = 'PROVIDER';"
-```
+Ahora se hace desde el panel admin en la app Flutter:
+1. Ingresar con usuario ADMIN
+2. Ir a tab **Pendientes**
+3. Tocar **Verificar** sobre el proveedor
+4. El proveedor ya puede ver y aceptar trabajos
 
 ### 4.3 Uso como proveedor
 
@@ -188,7 +227,7 @@ Para verificar que todo funciona, seguir este flujo con dos telefonos (o un tele
 |---|--------|-------|--------------------|
 | 1 | Registrar cuenta cliente | Cliente | Login automatico, pantalla de cliente |
 | 2 | Registrar cuenta proveedor | Proveedor | Login automatico, pantalla de proveedor |
-| 3 | Verificar proveedor via SQL | Admin (SSH) | `is_verified = true` |
+| 3 | Verificar proveedor en panel admin | Admin (App Flutter) | `is_verified = true` |
 | 4 | Crear solicitud de 3 horas | Cliente | Estado PENDING, countdown 5 min |
 | 5 | Ver trabajos disponibles | Proveedor | La solicitud aparece en la lista |
 | 6 | Aceptar el trabajo | Proveedor | Estado cambia a ACCEPTED |
@@ -209,13 +248,23 @@ cd ~/Marketplace-Evelyn/app
 # Pull cambios
 git pull origin main
 
+MAPS_KEY="PEGAR_AQUI_TU_GOOGLE_MAPS_API_KEY"
+
 # Rebuild
 flutter build apk --release \
   --dart-define=API_BASE_URL=https://claudiasrv.duckdns.org \
-  --dart-define=ENV=production
+  --dart-define=ENV=production \
+  --dart-define=GOOGLE_MAPS_API_KEY="$MAPS_KEY"
+
+# Renombrar APK de salida
+VERSION_LINE="$(awk '/^version:/{print $2}' pubspec.yaml)"
+APP_VERSION="${VERSION_LINE%%+*}"
+APP_BUILD="${VERSION_LINE##*+}"
+APK_NAME="marketplace-evelyn-v${APP_VERSION}-build${APP_BUILD}-$(date -u +%Y%m%d).apk"
+mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/$APK_NAME"
 
 # Reinstalar en el telefono
-adb install -r build/app/outputs/flutter-apk/app-release.apk
+adb install -r "build/app/outputs/flutter-apk/$APK_NAME"
 ```
 
 ---
@@ -252,6 +301,19 @@ El cliente debe crear una nueva solicitud.
 1. Desinstalar la version anterior: **Ajustes > Apps > Marketplace > Desinstalar**
 2. Intentar instalar de nuevo
 3. Si persiste, verificar que el telefono tiene espacio suficiente
+
+### La app se cierra al abrir mapa o no muestra mapa
+
+1. Verificar que `AndroidManifest.xml` NO tenga `YOUR_GOOGLE_MAPS_API_KEY`
+2. Rebuild con `--dart-define=GOOGLE_MAPS_API_KEY=<tu_key>`
+3. Confirmar APIs habilitadas en Google Cloud:
+   - Maps SDK for Android
+   - Static Maps API
+4. Si el problema persiste, correr logcat en la PC local (no en VPS por SSH):
+   ```bash
+   adb logcat -c
+   adb logcat | rg -n "FATAL EXCEPTION|AndroidRuntime|Google Maps|com.marketplace"
+   ```
 
 ### Olvide la password de mi cuenta
 

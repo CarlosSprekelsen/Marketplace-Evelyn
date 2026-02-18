@@ -26,11 +26,28 @@ if ! command -v docker &>/dev/null; then
   chmod a+r /etc/apt/keyrings/docker.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
   apt-get update
-  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # Prefer Docker CE packages when available; fallback to Ubuntu package names.
+  if apt-cache show docker-ce >/dev/null 2>&1; then
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  else
+    apt-get install -y docker.io docker-buildx docker-compose-v2
+  fi
+
   usermod -aG docker "$DEPLOY_USER"
   echo "Docker installed."
 else
   echo "Docker already installed."
+
+  # Ensure modern compose/buildx commands are present on existing hosts.
+  if ! docker compose version >/dev/null 2>&1; then
+    apt-get update
+    apt-get install -y docker-compose-v2 || apt-get install -y docker-compose-plugin
+  fi
+  if ! docker buildx version >/dev/null 2>&1; then
+    apt-get update
+    apt-get install -y docker-buildx || apt-get install -y docker-buildx-plugin
+  fi
 fi
 
 echo "=== Installing Nginx ==="

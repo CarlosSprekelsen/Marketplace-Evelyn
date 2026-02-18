@@ -6,7 +6,7 @@
  *   npx ts-node -r tsconfig-paths/register src/scripts/reset-password.ts <email> <new_password>
  *
  * Inside Docker:
- *   docker-compose exec backend npx ts-node -r tsconfig-paths/register src/scripts/reset-password.ts <email> <new_password>
+ *   docker compose exec backend npx ts-node -r tsconfig-paths/register src/scripts/reset-password.ts <email> <new_password>
  */
 import { AppDataSource } from '../data-source';
 import { User } from '../users/user.entity';

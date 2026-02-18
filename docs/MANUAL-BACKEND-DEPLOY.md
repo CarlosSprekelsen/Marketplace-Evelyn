@@ -115,11 +115,12 @@ bash infra/scripts/deploy.sh
 
 El script hace:
 1. `git pull origin main`
-2. `docker compose down` (para contenedores viejos)
-3. `docker compose up -d --build` (build de la imagen + arranque)
-4. Espera el healthcheck del backend
-5. Ejecuta migraciones de base de datos
-6. Verifica que `/health` retorna 200
+2. `docker compose up -d postgres redis` (asegura servicios de datos sin apagar produccion)
+3. `docker compose build backend`
+4. `docker compose up -d --no-deps --force-recreate backend` (recrea solo backend)
+5. Espera el healthcheck del backend
+6. Ejecuta migraciones de base de datos
+7. Verifica que `/health` retorna 200
 
 Verificar que todo esta corriendo:
 

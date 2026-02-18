@@ -15,6 +15,10 @@ All `npm` commands must run inside Docker containers. The Dockerfile has three s
 - **test** — reuses builder, has jest and all dev deps
 - **production** — lean image, no dev deps
 
+**Use Docker Compose v2 syntax only:** `docker compose ...`  
+Do not use legacy `docker-compose` commands (v1), as they can fail with
+`KeyError: 'ContainerConfig'` during container recreation on this host.
+
 ```bash
 # Run tests (uses test stage — has jest):
 cd /home/carlossprekelsen/Marketplace-Evelyn
@@ -30,8 +34,8 @@ To rebuild and deploy after code changes:
 ```bash
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 ```
 
 **IMPORTANT:** Never run `npm run test` inside the production container — it has no jest.
@@ -105,8 +109,8 @@ Create an idempotent seed that:
 # Rebuild backend container with the new seed file:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 # Run the admin seed inside the container:
 docker exec infra_backend_1 npm run seed:admin
@@ -176,8 +180,8 @@ Show a count badge: "X proveedores esperando revisión".
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 # Run tests:
 cd /home/carlossprekelsen/Marketplace-Evelyn && docker build -f backend/docker/Dockerfile --target test -t marketplace-test backend && docker run --rm marketplace-test
@@ -226,8 +230,8 @@ Use the existing `fullAddress` getter from `ServiceRequestModel` which already c
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 cd /home/carlossprekelsen/Marketplace-Evelyn && docker build -f backend/docker/Dockerfile --target test -t marketplace-test backend && docker run --rm marketplace-test
 
@@ -275,8 +279,8 @@ Use the existing `PushNotificationsService.sendToTokens()` method. If the user h
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 cd /home/carlossprekelsen/Marketplace-Evelyn && docker build -f backend/docker/Dockerfile --target test -t marketplace-test backend && docker run --rm marketplace-test
 
@@ -333,8 +337,8 @@ When lat/lng are null, show grey text: "Ubicación no configurada por el cliente
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 # Run migration and tests:
 docker exec infra_backend_1 npx typeorm migration:run -d dist/data-source.js
@@ -379,9 +383,13 @@ In the address form bottom sheet (`_AddressFormSheet` in `addresses_screen.dart`
    Use `Image.network` with a fallback for missing API key.
 
 **API key setup:**
+- Obtain/recover key from Google Cloud Console (`APIs & Services > Credentials`), then enable:
+  - Maps SDK for Android
+  - Static Maps API
 - Flutter key goes in `AndroidManifest.xml` as `<meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_KEY"/>` inside `<application>`
 - Use a placeholder value like `YOUR_GOOGLE_MAPS_API_KEY` with a comment to replace
 - The key should be restricted by package name in Google Cloud Console (document this in a comment)
+- Build APK with `--dart-define=GOOGLE_MAPS_API_KEY=<YOUR_KEY>` so static map thumbnails can render
 
 **DO NOT:**
 - Add a backend dependency on Google Maps
@@ -411,8 +419,8 @@ Run this sequence end-to-end before marking Sprint 5 complete:
 # Backend (all commands run inside Docker):
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
 docker stop infra_backend_1 && docker rm infra_backend_1
-docker-compose -f docker-compose.prod.yml --env-file .env.production build backend
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
+docker compose -f docker-compose.prod.yml --env-file .env.production build backend
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 docker exec infra_backend_1 npx typeorm migration:run -d dist/data-source.js
 docker exec infra_backend_1 npm run seed:admin

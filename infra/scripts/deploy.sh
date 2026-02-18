@@ -25,11 +25,14 @@ echo "=== Pulling latest code ==="
 cd "$PROJECT_ROOT"
 git pull origin main
 
-echo "=== Stopping existing containers ==="
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down
+echo "=== Ensuring data services are running (non-destructive) ==="
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d postgres redis
 
-echo "=== Building and starting containers ==="
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build
+echo "=== Rebuilding backend image ==="
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build backend
+
+echo "=== Recreating backend only (keep postgres/redis running) ==="
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps --force-recreate backend
 
 echo "=== Waiting for backend health check ==="
 MAX_RETRIES=30
