@@ -115,6 +115,27 @@ IN_PROGRESS → CANCELLED  (admin only)
 - Before release, verify no placeholder remains:
   - `YOUR_GOOGLE_MAPS_API_KEY` must not be present in final build inputs.
 
+### Official Setup Links
+
+- Google Maps Platform Get Started:
+  https://developers.google.com/maps/get-started
+- Flutter package configuration (Google Maps for Flutter):
+  https://developers.google.com/maps/flutter-package/config
+- Create Cloud Billing account:
+  https://cloud.google.com/billing/docs/how-to/create-billing-account
+- Link/enable billing on a project:
+  https://cloud.google.com/billing/docs/how-to/modify-project
+- Manage payment methods / billing profile:
+  https://cloud.google.com/billing/docs/how-to/manage-billing-account
+- Manage API keys:
+  https://cloud.google.com/docs/authentication/api-keys
+- API key security best practices:
+  https://developers.google.com/maps/api-security-best-practices
+- Maps SDK for Android usage and billing:
+  https://developers.google.com/maps/documentation/android-sdk/usage-and-billing
+- Maps Static API usage and billing:
+  https://developers.google.com/maps/documentation/maps-static/usage-and-billing
+
 ## Remote/ADB Caveat
 
 - If your IDE terminal is connected to the VPS over SSH, `adb` runs on the VPS and will not see a phone plugged into your local laptop.

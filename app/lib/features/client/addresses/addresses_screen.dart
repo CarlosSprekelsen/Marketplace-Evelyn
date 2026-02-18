@@ -12,9 +12,10 @@ import 'addresses_provider.dart';
 const double _defaultLatitude = 25.2048;
 const double _defaultLongitude = 55.2708;
 const String _placeholderGoogleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+const String _defaultStaticMapsApiKey = 'AIzaSyBWwjcR_LUhKmcsY_4cei_Ohzv9fdKgWJI';
 const String _staticMapsApiKey = String.fromEnvironment(
   'GOOGLE_MAPS_API_KEY',
-  defaultValue: _placeholderGoogleMapsApiKey,
+  defaultValue: _defaultStaticMapsApiKey,
 );
 
 bool get _hasStaticMapsApiKey =>

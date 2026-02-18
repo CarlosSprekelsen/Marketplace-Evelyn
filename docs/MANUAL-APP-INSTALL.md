@@ -28,12 +28,25 @@ La app usa Google Maps en dos partes:
    - **Static Maps API**
 4. En **APIs & Services > Credentials**, crear/reusar una API key
 
+Links oficiales:
+- Get started (Maps Platform): https://developers.google.com/maps/get-started
+- Flutter config (Google Maps): https://developers.google.com/maps/flutter-package/config
+- Crear billing account: https://cloud.google.com/billing/docs/how-to/create-billing-account
+- Asociar billing al proyecto: https://cloud.google.com/billing/docs/how-to/modify-project
+- Gestionar metodos de pago: https://cloud.google.com/billing/docs/how-to/manage-billing-account
+- Crear/gestionar API keys: https://cloud.google.com/docs/authentication/api-keys
+- Buenas practicas de seguridad para API keys: https://developers.google.com/maps/api-security-best-practices
+
 ### 0.2 Restricciones recomendadas
 
 - Para Android Maps SDK: restringir por Android app
   - Package name: `com.marketplace`
   - SHA-1/SHA-256 de tu keystore (debug o release)
 - Para Static Maps: restringir por API (Static Maps API)
+
+Nota de facturacion:
+- En la mayoria de cuentas self-service, Google Cloud Billing pide un perfil de pago con tarjeta.
+- Sin billing habilitado en el proyecto, Maps SDK/Static Maps no funcionaran en produccion.
 
 ### 0.3 Configurar en el proyecto
 

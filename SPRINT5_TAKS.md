@@ -386,6 +386,12 @@ In the address form bottom sheet (`_AddressFormSheet` in `addresses_screen.dart`
 - Obtain/recover key from Google Cloud Console (`APIs & Services > Credentials`), then enable:
   - Maps SDK for Android
   - Static Maps API
+- Official setup references:
+  - https://developers.google.com/maps/get-started
+  - https://developers.google.com/maps/flutter-package/config
+  - https://cloud.google.com/billing/docs/how-to/create-billing-account
+  - https://cloud.google.com/billing/docs/how-to/modify-project
+  - https://cloud.google.com/docs/authentication/api-keys
 - Flutter key goes in `AndroidManifest.xml` as `<meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_KEY"/>` inside `<application>`
 - Use a placeholder value like `YOUR_GOOGLE_MAPS_API_KEY` with a comment to replace
 - The key should be restricted by package name in Google Cloud Console (document this in a comment)
