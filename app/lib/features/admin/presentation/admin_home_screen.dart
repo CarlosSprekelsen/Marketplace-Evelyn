@@ -21,6 +21,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
   int _selectedTab = 0;
   UserRole? _roleFilter;
   List<User> _users = const [];
+  List<User> _pendingProviders = const [];
   List<ServiceRequestModel> _requests = const [];
 
   @override
@@ -47,37 +48,42 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+            )
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                  child: SegmentedButton<int>(
+                    segments: const [
+                      ButtonSegment(value: 0, label: Text('Solicitudes')),
+                      ButtonSegment(value: 1, label: Text('Usuarios')),
+                      ButtonSegment(value: 2, label: Text('Pendientes')),
+                    ],
+                    selected: {_selectedTab},
+                    onSelectionChanged: (selection) {
+                      setState(() {
+                        _selectedTab = selection.first;
+                      });
+                    },
                   ),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                      child: SegmentedButton<int>(
-                        segments: const [
-                          ButtonSegment(value: 0, label: Text('Solicitudes')),
-                          ButtonSegment(value: 1, label: Text('Usuarios')),
-                        ],
-                        selected: {_selectedTab},
-                        onSelectionChanged: (selection) {
-                          setState(() {
-                            _selectedTab = selection.first;
-                          });
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _loadData,
-                        child: _selectedTab == 0 ? _buildRequestsList() : _buildUsersList(),
-                      ),
-                    ),
-                  ],
                 ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: _selectedTab == 0
+                        ? _buildRequestsList()
+                        : _selectedTab == 1
+                        ? _buildUsersList()
+                        : _buildPendingProvidersList(),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -150,7 +156,9 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
   Widget _buildUsersList() {
     final filteredUsers = _roleFilter == null
         ? _users
-        : _users.where((user) => user.role == _roleFilter).toList(growable: false);
+        : _users
+              .where((user) => user.role == _roleFilter)
+              .toList(growable: false);
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -173,7 +181,8 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
             ChoiceChip(
               label: const Text('Proveedores'),
               selected: _roleFilter == UserRole.provider,
-              onSelected: (_) => setState(() => _roleFilter = UserRole.provider),
+              onSelected: (_) =>
+                  setState(() => _roleFilter = UserRole.provider),
             ),
             ChoiceChip(
               label: const Text('Admins'),
@@ -194,6 +203,37 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
     );
   }
 
+  Widget _buildPendingProvidersList() {
+    if (_pendingProviders.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(12),
+        children: const [
+          SizedBox(height: 8),
+          Text(
+            '0 proveedores esperando revisión',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 120),
+          Center(child: Text('No hay proveedores pendientes')),
+        ],
+      );
+    }
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(12),
+      children: [
+        Text(
+          '${_pendingProviders.length} proveedores esperando revisión',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 10),
+        ..._pendingProviders.map(_buildPendingProviderCard),
+      ],
+    );
+  }
+
   Widget _buildUserCard(User user) {
     final isProvider = user.role == UserRole.provider;
     return Card(
@@ -203,7 +243,10 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              user.fullName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
             Text(user.email),
             Text('Rol: ${user.role.value}'),
@@ -219,12 +262,68 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
                   OutlinedButton(
                     onPressed: _updating
                         ? null
-                        : () => _toggleVerified(user, isVerified: !user.isVerified),
-                    child: Text(user.isVerified ? 'Quitar verificación' : 'Verificar'),
+                        : () => _toggleVerified(
+                            user,
+                            isVerified: !user.isVerified,
+                          ),
+                    child: Text(
+                      user.isVerified ? 'Quitar verificación' : 'Verificar',
+                    ),
                   ),
                 OutlinedButton(
-                  onPressed: _updating ? null : () => _toggleBlocked(user, isBlocked: !user.isBlocked),
+                  onPressed: _updating
+                      ? null
+                      : () => _toggleBlocked(user, isBlocked: !user.isBlocked),
                   child: Text(user.isBlocked ? 'Desbloquear' : 'Bloquear'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPendingProviderCard(User user) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              user.fullName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(user.email),
+            Text('Rol: ${user.role.value}'),
+            Text('Distrito: ${user.district?.name ?? user.districtId}'),
+            Text('Telefono: ${user.phone}'),
+            Text('Creado: ${formatDateTime(user.createdAt)}'),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _updating
+                        ? null
+                        : () => _toggleVerified(user, isVerified: true),
+                    child: const Text('Verificar'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _updating
+                        ? null
+                        : () => _toggleBlocked(user, isBlocked: true),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                    child: const Text('Bloquear'),
+                  ),
                 ),
               ],
             ),
@@ -247,6 +346,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
       final results = await Future.wait([
         repo.getUsers(),
         repo.getServiceRequests(),
+        repo.getPendingProviders(),
       ]);
       if (!mounted) {
         return;
@@ -254,6 +354,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
       setState(() {
         _users = results[0] as List<User>;
         _requests = results[1] as List<ServiceRequestModel>;
+        _pendingProviders = results[2] as List<User>;
       });
     } catch (error) {
       if (!mounted) {
@@ -342,6 +443,24 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
       _users = _users
           .map((existing) => existing.id == user.id ? user : existing)
           .toList(growable: false);
+      final isPendingProvider =
+          user.role == UserRole.provider && !user.isVerified && !user.isBlocked;
+
+      if (isPendingProvider) {
+        if (_pendingProviders.any((pending) => pending.id == user.id)) {
+          _pendingProviders = _pendingProviders
+              .map((existing) => existing.id == user.id ? user : existing)
+              .toList(growable: false);
+        } else {
+          final updated = [..._pendingProviders, user]
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          _pendingProviders = updated;
+        }
+      } else {
+        _pendingProviders = _pendingProviders
+            .where((pending) => pending.id != user.id)
+            .toList(growable: false);
+      }
     });
   }
 
@@ -357,8 +476,8 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Operacion fallida: $error')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Operacion fallida: $error')));
   }
 }

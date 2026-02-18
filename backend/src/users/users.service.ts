@@ -164,6 +164,18 @@ export class UsersService {
     });
   }
 
+  async findPendingProviders(): Promise<User[]> {
+    return this.usersRepository.find({
+      where: {
+        role: UserRole.PROVIDER,
+        is_verified: false,
+        is_blocked: false,
+      },
+      relations: ['district'],
+      order: { created_at: 'ASC' },
+    });
+  }
+
   async setVerified(userId: string, isVerified: boolean): Promise<User> {
     await this.usersRepository.update(userId, { is_verified: isVerified });
     const user = await this.findById(userId);

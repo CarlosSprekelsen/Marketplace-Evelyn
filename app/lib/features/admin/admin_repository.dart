@@ -11,10 +11,16 @@ class AdminRepository {
   Future<List<User>> getUsers({UserRole? role}) async {
     final response = await _dio.get(
       '/admin/users',
-      queryParameters: {
-        if (role != null) 'role': role.value,
-      },
+      queryParameters: {if (role != null) 'role': role.value},
     );
+    final data = response.data as List<dynamic>;
+    return data
+        .map((item) => User.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  Future<List<User>> getPendingProviders() async {
+    final response = await _dio.get('/admin/providers/pending');
     final data = response.data as List<dynamic>;
     return data
         .map((item) => User.fromJson(item as Map<String, dynamic>))
@@ -41,7 +47,9 @@ class AdminRepository {
     final response = await _dio.get('/admin/service-requests');
     final data = response.data as List<dynamic>;
     return data
-        .map((item) => ServiceRequestModel.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) => ServiceRequestModel.fromJson(item as Map<String, dynamic>),
+        )
         .toList(growable: false);
   }
 

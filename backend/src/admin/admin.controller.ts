@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Patch, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -7,7 +16,6 @@ import { UserRole } from '../users/user.entity';
 import { UsersService } from '../users/users.service';
 import { SetUserVerifiedDto } from './dto/set-user-verified.dto';
 import { SetUserBlockedDto } from './dto/set-user-blocked.dto';
-import { Body } from '@nestjs/common';
 import { ServiceRequestsService } from '../service-requests/service-requests.service';
 import { SetRequestStatusDto } from './dto/set-request-status.dto';
 import { AdminResetPasswordDto } from './dto/admin-reset-password.dto';
@@ -30,6 +38,13 @@ export class AdminController {
       role && Object.values(UserRole).includes(role as UserRole) ? (role as UserRole) : undefined;
     const users = await this.usersService.listUsers(validRole);
     return users.map((user) => this.sanitizeUser(user));
+  }
+
+  @Get('providers/pending')
+  @ApiOperation({ summary: 'List pending provider applications for review' })
+  async listPendingProviders() {
+    const providers = await this.usersService.findPendingProviders();
+    return providers.map((provider) => this.sanitizeUser(provider));
   }
 
   @Patch('users/:id/verify')
