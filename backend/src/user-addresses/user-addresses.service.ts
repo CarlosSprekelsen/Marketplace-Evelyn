@@ -111,9 +111,11 @@ export class UserAddressesService {
 
   async setDefault(id: string, userId: string): Promise<UserAddress> {
     const address = await this.findOne(id, userId);
-    await this.addressesRepository.update({ user_id: userId }, { is_default: false });
+    await this.addressesRepository.manager.transaction(async (manager) => {
+      await manager.update(UserAddress, { user_id: userId }, { is_default: false });
+      await manager.update(UserAddress, { id }, { is_default: true });
+    });
     address.is_default = true;
-    await this.addressesRepository.save(address);
     return address;
   }
 }

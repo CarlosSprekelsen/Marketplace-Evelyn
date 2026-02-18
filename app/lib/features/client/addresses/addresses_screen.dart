@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../config/environment.dart';
 import '../../../shared/models/user_address.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../state/client_requests_providers.dart';
@@ -21,6 +22,8 @@ const String _staticMapsApiKey = String.fromEnvironment(
 bool get _hasStaticMapsApiKey =>
     _staticMapsApiKey.isNotEmpty &&
     _staticMapsApiKey != _placeholderGoogleMapsApiKey;
+
+bool get _interactiveMapEnabled => !Environment.disableInteractiveGoogleMap;
 
 class AddressesScreen extends ConsumerStatefulWidget {
   const AddressesScreen({super.key});
@@ -515,7 +518,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              if (_hasStaticMapsApiKey)
+              if (_hasStaticMapsApiKey && _interactiveMapEnabled)
                 SizedBox(
                   height: 200,
                   child: ClipRRect(
@@ -555,6 +558,25 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                       },
                     ),
                   ),
+                )
+              else if (_hasStaticMapsApiKey)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _StaticMapThumbnail(
+                      latitude: _latitude,
+                      longitude: _longitude,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Mapa interactivo deshabilitado temporalmente para '
+                      'evitar cierres en algunos dispositivos.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
                 )
               else
                 const _MapThumbnailFallback(

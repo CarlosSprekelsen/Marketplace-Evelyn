@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/api/dio_client.dart';
@@ -57,26 +56,22 @@ final districtsProvider = FutureProvider<List<District>>((ref) async {
   return repository.getDistricts();
 });
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(
-    repository: ref.read(authRepositoryProvider),
-    tokenStorage: ref.read(tokenStorageProvider),
-    eventBus: ref.read(authEventBusProvider),
-    pushNotificationsService: ref.read(pushNotificationsServiceProvider),
-  );
-});
+final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier({
-    required AuthRepository repository,
-    required TokenStorage tokenStorage,
-    required AuthEventBus eventBus,
-    required PushNotificationsService pushNotificationsService,
-  })  : _repository = repository,
-        _tokenStorage = tokenStorage,
-        _eventBus = eventBus,
-        _pushNotificationsService = pushNotificationsService,
-        super(AuthState.loading) {
+class AuthNotifier extends Notifier<AuthState> {
+  AuthRepository get _repository => ref.read(authRepositoryProvider);
+  TokenStorage get _tokenStorage => ref.read(tokenStorageProvider);
+  AuthEventBus get _eventBus => ref.read(authEventBusProvider);
+  PushNotificationsService get _pushNotificationsService =>
+      ref.read(pushNotificationsServiceProvider);
+
+  StreamSubscription<AuthEvent>? _eventSub;
+
+  @override
+  AuthState build() {
+    _eventSub?.cancel();
     _eventSub = _eventBus.stream.listen((event) async {
       if (event == AuthEvent.sessionExpired) {
         await _tokenStorage.clearTokens();
@@ -86,14 +81,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
       }
     });
-    _initialize();
+    ref.onDispose(() {
+      _eventSub?.cancel();
+      _eventSub = null;
+    });
+    unawaited(_initialize());
+    return AuthState.loading;
   }
-
-  final AuthRepository _repository;
-  final TokenStorage _tokenStorage;
-  final AuthEventBus _eventBus;
-  final PushNotificationsService _pushNotificationsService;
-  StreamSubscription<AuthEvent>? _eventSub;
 
   Future<void> _initialize() async {
     try {
@@ -202,12 +196,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (state.isError) {
       state = AuthState.unauthenticated;
     }
-  }
-
-  @override
-  void dispose() {
-    _eventSub?.cancel();
-    super.dispose();
   }
 
   String _mapAuthError(Object error) {

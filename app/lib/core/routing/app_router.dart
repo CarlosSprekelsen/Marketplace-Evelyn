@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,9 +23,10 @@ import '../../features/legal/presentation/legal_document_screen.dart';
 import '../../shared/models/user.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final notifier = ref.read(authNotifierProvider.notifier);
-  final refresh = _RouterRefreshStream(notifier.stream);
-
+  final refresh = _RouterRefreshNotifier();
+  ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+    refresh.trigger();
+  });
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
@@ -194,17 +193,11 @@ String _homeByRole(UserRole role) {
   return '/client/home';
 }
 
-class _RouterRefreshStream extends ChangeNotifier {
-  _RouterRefreshStream(Stream<AuthState> stream) {
-    _subscription = stream.listen((_) => notifyListeners());
-  }
+class _RouterRefreshNotifier extends ChangeNotifier {
+  _RouterRefreshNotifier();
 
-  late final StreamSubscription<AuthState> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
+  void trigger() {
+    notifyListeners();
   }
 }
 

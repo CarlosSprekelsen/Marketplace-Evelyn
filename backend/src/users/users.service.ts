@@ -1,4 +1,9 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
@@ -179,13 +184,18 @@ export class UsersService {
   }
 
   async setVerified(userId: string, isVerified: boolean): Promise<User> {
-    await this.usersRepository.update(userId, { is_verified: isVerified });
     const user = await this.findById(userId);
     if (!user) {
-      throw new Error('User not found after verification update');
+      throw new NotFoundException('User not found');
+    }
+    if (user.role !== UserRole.PROVIDER) {
+      throw new BadRequestException('Only PROVIDER users can be verified');
     }
 
-    if (user.role === UserRole.PROVIDER) {
+    await this.usersRepository.update(userId, { is_verified: isVerified });
+    user.is_verified = isVerified;
+
+    if (user.fcm_token) {
       await this.pushNotificationsService.sendToTokens([user.fcm_token], {
         title: isVerified ? 'Cuenta verificada' : 'Verificacion revocada',
         body: isVerified
@@ -201,11 +211,26 @@ export class UsersService {
   }
 
   async setBlocked(userId: string, isBlocked: boolean): Promise<User> {
-    await this.usersRepository.update(userId, { is_blocked: isBlocked });
     const user = await this.findById(userId);
     if (!user) {
-      throw new Error('User not found after block update');
+      throw new NotFoundException('User not found');
     }
+
+    await this.usersRepository.update(userId, { is_blocked: isBlocked });
+    user.is_blocked = isBlocked;
+
+    if (user.fcm_token) {
+      await this.pushNotificationsService.sendToTokens([user.fcm_token], {
+        title: isBlocked ? 'Cuenta bloqueada' : 'Cuenta desbloqueada',
+        body: isBlocked
+          ? 'Tu cuenta ha sido bloqueada. Contacta soporte para mas informacion.'
+          : 'Tu cuenta ha sido desbloqueada. Ya puedes acceder a la plataforma.',
+        data: {
+          type: isBlocked ? 'ACCOUNT_BLOCKED' : 'ACCOUNT_UNBLOCKED',
+        },
+      });
+    }
+
     return user;
   }
 }

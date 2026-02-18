@@ -13,4 +13,9 @@ class Environment {
 
   static bool get isDevelopment => env == 'development';
   static bool get isProduction => env == 'production';
+
+  static const bool disableInteractiveGoogleMap = bool.fromEnvironment(
+    'DISABLE_INTERACTIVE_GOOGLE_MAP',
+    defaultValue: false,
+  );
 }

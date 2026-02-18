@@ -26,14 +26,14 @@ docker build -f backend/docker/Dockerfile --target test -t marketplace-test back
 docker run --rm marketplace-test
 
 # Run seeds / migrations (inside the production container):
-docker exec infra_backend_1 npm run seed:admin
-docker exec infra_backend_1 npx typeorm migration:run -d dist/data-source.js
+docker exec infra-backend-1 npm run seed:admin
+docker exec infra-backend-1 npx typeorm migration:run -d dist/data-source.js
 ```
 
 To rebuild and deploy after code changes:
 ```bash
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 ```
@@ -108,16 +108,16 @@ Create an idempotent seed that:
 ```bash
 # Rebuild backend container with the new seed file:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 # Run the admin seed inside the container:
-docker exec infra_backend_1 npm run seed:admin
+docker exec infra-backend-1 npm run seed:admin
 # Expected: "Admin user created" or "Admin user already exists"
 
 # Verify in DB:
-docker exec infra_postgres_1 \
+docker exec infra-postgres-1 \
   psql -U marketplace -c "SELECT email, role, is_verified FROM users WHERE role = 'ADMIN';"
 # Expected: one row with admin email, ADMIN, true
 
@@ -179,7 +179,7 @@ Show a count badge: "X proveedores esperando revisión".
 ```bash
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
@@ -229,7 +229,7 @@ Use the existing `fullAddress` getter from `ServiceRequestModel` which already c
 ```bash
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
@@ -278,7 +278,7 @@ Use the existing `PushNotificationsService.sendToTokens()` method. If the user h
 ```bash
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
@@ -286,7 +286,7 @@ cd /home/carlossprekelsen/Marketplace-Evelyn && docker build -f backend/docker/D
 
 # Manual: approve a provider → check device receives push notification
 # (If FCM_SERVER_KEY not configured, check container logs for "Skipping push notification"):
-docker logs infra_backend_1 --tail 20
+docker logs infra-backend-1 --tail 20
 ```
 
 ---
@@ -336,12 +336,12 @@ When lat/lng are null, show grey text: "Ubicación no configurada por el cliente
 ```bash
 # Rebuild and restart backend:
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
 # Run migration and tests:
-docker exec infra_backend_1 npx typeorm migration:run -d dist/data-source.js
+docker exec infra-backend-1 npx typeorm migration:run -d dist/data-source.js
 cd /home/carlossprekelsen/Marketplace-Evelyn && docker build -f backend/docker/Dockerfile --target test -t marketplace-test backend && docker run --rm marketplace-test
 
 cd /home/carlossprekelsen/Marketplace-Evelyn/app
@@ -424,12 +424,12 @@ Run this sequence end-to-end before marking Sprint 5 complete:
 ```bash
 # Backend (all commands run inside Docker):
 cd /home/carlossprekelsen/Marketplace-Evelyn/infra
-docker stop infra_backend_1 && docker rm infra_backend_1
+docker stop infra-backend-1 && docker rm infra-backend-1
 docker compose -f docker-compose.prod.yml --env-file .env.production build backend
 docker compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 
-docker exec infra_backend_1 npx typeorm migration:run -d dist/data-source.js
-docker exec infra_backend_1 npm run seed:admin
+docker exec infra-backend-1 npx typeorm migration:run -d dist/data-source.js
+docker exec infra-backend-1 npm run seed:admin
 cd /home/carlossprekelsen/Marketplace-Evelyn && docker build -f backend/docker/Dockerfile --target test -t marketplace-test backend && docker run --rm marketplace-test
 # Expected: all tests pass, admin user exists
 
