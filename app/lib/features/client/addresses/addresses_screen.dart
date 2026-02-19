@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../config/environment.dart';
-import '../../../main.dart' show googleMapsRendererFailed;
 import '../../../shared/models/user_address.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../state/client_requests_providers.dart';
@@ -24,8 +23,7 @@ bool get _hasStaticMapsApiKey =>
     _staticMapsApiKey.isNotEmpty &&
     _staticMapsApiKey != _placeholderGoogleMapsApiKey;
 
-bool get _interactiveMapEnabled =>
-    !Environment.disableInteractiveGoogleMap && !googleMapsRendererFailed;
+bool get _interactiveMapEnabled => !Environment.disableInteractiveGoogleMap;
 
 class AddressesScreen extends ConsumerStatefulWidget {
   const AddressesScreen({super.key});
@@ -458,7 +456,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                     labelText: 'Distrito',
                     border: OutlineInputBorder(),
                   ),
-                  value: _selectedDistrictId,
+                  initialValue: _selectedDistrictId,
                   items: districts
                       .map(
                         (d) =>
