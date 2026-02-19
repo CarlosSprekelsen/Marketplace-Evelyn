@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../config/environment.dart';
+import '../../../main.dart' show googleMapsRendererFailed;
 import '../../../shared/models/user_address.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../state/client_requests_providers.dart';
@@ -23,7 +24,8 @@ bool get _hasStaticMapsApiKey =>
     _staticMapsApiKey.isNotEmpty &&
     _staticMapsApiKey != _placeholderGoogleMapsApiKey;
 
-bool get _interactiveMapEnabled => !Environment.disableInteractiveGoogleMap;
+bool get _interactiveMapEnabled =>
+    !Environment.disableInteractiveGoogleMap && !googleMapsRendererFailed;
 
 class AddressesScreen extends ConsumerStatefulWidget {
   const AddressesScreen({super.key});

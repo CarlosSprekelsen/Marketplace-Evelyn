@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
@@ -10,6 +9,10 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'core/routing/app_router.dart';
 import 'features/auth/state/auth_notifier.dart';
 import 'features/auth/state/auth_state.dart';
+
+/// Set to true if the Google Maps renderer fails to initialize.
+/// Checked by screens that embed interactive GoogleMap widgets.
+bool googleMapsRendererFailed = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,12 +37,10 @@ Future<void> _configureAndroidGoogleMapsRenderer() async {
 
   try {
     // ignore: deprecated_member_use
-    await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.legacy);
-  } on PlatformException catch (error) {
-    debugPrint(
-      'Google Maps renderer initialization skipped: '
-      '${error.message ?? error.code}',
-    );
+    await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.latest);
+  } catch (error) {
+    googleMapsRendererFailed = true;
+    debugPrint('Google Maps renderer initialization failed: $error');
   }
 }
 
