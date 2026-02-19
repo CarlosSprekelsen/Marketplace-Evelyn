@@ -458,7 +458,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                     labelText: 'Distrito',
                     border: OutlineInputBorder(),
                   ),
-                  initialValue: _selectedDistrictId,
+                  value: _selectedDistrictId,
                   items: districts
                       .map(
                         (d) =>
@@ -536,6 +536,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                           position: LatLng(_latitude, _longitude),
                           draggable: true,
                           onDragEnd: (position) {
+                            if (!mounted) return;
                             setState(() {
                               _latitude = position.latitude;
                               _longitude = position.longitude;
@@ -544,6 +545,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                         ),
                       },
                       onTap: (position) {
+                        if (!mounted) return;
                         setState(() {
                           _latitude = position.latitude;
                           _longitude = position.longitude;
@@ -650,7 +652,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
           labelCustom: _label == AddressLabel.otro
               ? _labelCustomCtrl.text.trim()
               : null,
-          districtId: _selectedDistrictId!,
+          districtId: _selectedDistrictId ?? '',
           addressStreet: _streetCtrl.text.trim(),
           addressNumber: _numberCtrl.text.trim(),
           addressFloorApt: _floorAptCtrl.text.trim().isNotEmpty
