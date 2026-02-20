@@ -86,10 +86,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final qp = state.uri.queryParameters;
           return RequestFormScreen(
             prefillDistrictId: qp['district_id'],
-            prefillAddressStreet: qp['address_street'],
-            prefillAddressNumber: qp['address_number'],
-            prefillAddressFloorApt: qp['address_floor_apt'],
-            prefillAddressReference: qp['address_reference'],
             prefillHours: int.tryParse(qp['hours'] ?? ''),
           );
         },

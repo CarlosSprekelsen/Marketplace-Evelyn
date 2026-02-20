@@ -4,27 +4,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/price_quote.dart';
 import '../../../shared/models/service_request_model.dart';
+import '../../../shared/models/user_address.dart';
 import '../../../shared/utils/date_formatter.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../addresses/address_picker_widget.dart';
+import '../addresses/addresses_provider.dart';
 import '../state/client_requests_providers.dart';
 
 class RequestFormScreen extends ConsumerStatefulWidget {
   const RequestFormScreen({
     super.key,
     this.prefillDistrictId,
-    this.prefillAddressStreet,
-    this.prefillAddressNumber,
-    this.prefillAddressFloorApt,
-    this.prefillAddressReference,
     this.prefillHours,
   });
 
   final String? prefillDistrictId;
-  final String? prefillAddressStreet;
-  final String? prefillAddressNumber;
-  final String? prefillAddressFloorApt;
-  final String? prefillAddressReference;
   final int? prefillHours;
 
   @override
@@ -33,13 +27,10 @@ class RequestFormScreen extends ConsumerStatefulWidget {
 
 class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _streetController = TextEditingController();
-  final _numberController = TextEditingController();
-  final _floorAptController = TextEditingController();
-  final _referenceController = TextEditingController();
 
   String? _districtId;
   String? _selectedAddressId;
+  UserAddress? _selectedAddress;
   int _hours = 1;
   DateTime? _scheduledAt;
   PriceQuote? _quote;
@@ -53,35 +44,15 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
     if (widget.prefillDistrictId != null) {
       _districtId = widget.prefillDistrictId;
     }
-    if (widget.prefillAddressStreet != null) {
-      _streetController.text = widget.prefillAddressStreet!;
-    }
-    if (widget.prefillAddressNumber != null) {
-      _numberController.text = widget.prefillAddressNumber!;
-    }
-    if (widget.prefillAddressFloorApt != null) {
-      _floorAptController.text = widget.prefillAddressFloorApt!;
-    }
-    if (widget.prefillAddressReference != null) {
-      _referenceController.text = widget.prefillAddressReference!;
-    }
     if (widget.prefillHours != null) {
       _hours = widget.prefillHours!;
     }
   }
 
   @override
-  void dispose() {
-    _streetController.dispose();
-    _numberController.dispose();
-    _floorAptController.dispose();
-    _referenceController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final districtsAsync = ref.watch(districtsProvider);
+    final addressesAsync = ref.watch(userAddressesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -99,8 +70,8 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                 children: [
                   districtsAsync.when(
                     data: (districts) {
-                      _districtId ??= districts.isNotEmpty ? districts.first.id : null;
                       final selectedDistrict = districts.where((d) => d.id == _districtId).firstOrNull;
+                      final districtLocked = _selectedAddressId != null;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -118,13 +89,15 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                                   );
                                 })
                                 .toList(growable: false),
-                            onChanged: (value) {
-                              setState(() {
-                                _districtId = value;
-                                _quote = null;
-                              });
-                              _fetchQuoteIfReady();
-                            },
+                            onChanged: districtLocked
+                                ? null
+                                : (value) {
+                                    setState(() {
+                                      _districtId = value;
+                                      _quote = null;
+                                    });
+                                    _fetchQuoteIfReady();
+                                  },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Selecciona un distrito';
@@ -175,98 +148,78 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  AddressPickerWidget(
-                    selectedAddressId: _selectedAddressId,
-                    onAddressSelected: (addr) {
-                      setState(() {
-                        _selectedAddressId = addr.id;
-                        _districtId = addr.districtId;
-                        _streetController.text = addr.addressStreet;
-                        _numberController.text = addr.addressNumber;
-                        _floorAptController.text = addr.addressFloorApt ?? '';
-                        _referenceController.text = addr.addressReference ?? '';
-                        _quote = null;
-                      });
-                      _fetchQuoteIfReady();
+                  addressesAsync.when(
+                    data: (addresses) {
+                      if (addresses.isEmpty) {
+                        return Card(
+                          color: Colors.orange.shade50,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Primero agrega una dirección',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 8),
+                                OutlinedButton.icon(
+                                  onPressed: () => context.push('/client/addresses'),
+                                  icon: const Icon(Icons.add_location_alt_outlined),
+                                  label: const Text('Ir a mis direcciones'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AddressPickerWidget(
+                            selectedAddressId: _selectedAddressId,
+                            onAddressSelected: (addr) {
+                              setState(() {
+                                _selectedAddressId = addr.id;
+                                _selectedAddress = addr;
+                                _districtId = addr.districtId;
+                                _quote = null;
+                              });
+                              _fetchQuoteIfReady();
+                            },
+                            onNewAddress: () {
+                              setState(() {
+                                _selectedAddressId = null;
+                                _selectedAddress = null;
+                                _districtId = null;
+                                _quote = null;
+                              });
+                              context.push('/client/addresses');
+                            },
+                          ),
+                          if (_selectedAddress != null)
+                            _SelectedAddressSummaryCard(
+                              address: _selectedAddress!,
+                              districtName: _selectedAddress!.district?.name ??
+                                  districtsAsync
+                                      .asData
+                                      ?.value
+                                      .where((d) => d.id == _selectedAddress!.districtId)
+                                      .firstOrNull
+                                      ?.name,
+                            ),
+                        ],
+                      );
                     },
-                    onNewAddress: () {
-                      setState(() {
-                        _selectedAddressId = null;
-                        _streetController.clear();
-                        _numberController.clear();
-                        _floorAptController.clear();
-                        _referenceController.clear();
-                      });
-                    },
-                  ),
-                  TextFormField(
-                    controller: _streetController,
-                    readOnly: _selectedAddressId != null,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Calle / Avenida',
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: LinearProgressIndicator(),
                     ),
-                    validator: (value) {
-                      if (_selectedAddressId != null) return null;
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Ingresa la calle o avenida';
-                      }
-                      if (value.length > 200) {
-                        return 'Máximo 200 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _numberController,
-                    readOnly: _selectedAddressId != null,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Nº Casa / Edificio',
+                    error: (error, _) => Text(
+                      'No se pudo cargar direcciones: ${mapDioErrorToMessage(error)}',
+                      style: const TextStyle(color: Colors.red),
                     ),
-                    validator: (value) {
-                      if (_selectedAddressId != null) return null;
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Ingresa el número';
-                      }
-                      if (value.length > 50) {
-                        return 'Máximo 50 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _floorAptController,
-                    readOnly: _selectedAddressId != null,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Piso / Apartamento (opcional)',
-                    ),
-                    validator: (value) {
-                      if (value != null && value.length > 100) {
-                        return 'Máximo 100 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _referenceController,
-                    readOnly: _selectedAddressId != null,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Punto de referencia (opcional)',
-                      hintText: 'Ej: frente al parque, casa color azul',
-                    ),
-                    validator: (value) {
-                      if (value != null && value.length > 300) {
-                        return 'Máximo 300 caracteres';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
@@ -450,6 +403,11 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    final selectedAddress = _selectedAddress;
+    if (selectedAddress == null || _selectedAddressId == null) {
+      setState(() => _message = 'Selecciona una dirección guardada');
+      return;
+    }
     final districtId = _districtId;
     if (districtId == null || districtId.isEmpty) {
       setState(() => _message = 'Selecciona un distrito');
@@ -470,14 +428,10 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
       final request = await repo.createRequest(
         districtId: districtId,
         addressId: _selectedAddressId,
-        addressStreet: _selectedAddressId == null ? _streetController.text.trim() : null,
-        addressNumber: _selectedAddressId == null ? _numberController.text.trim() : null,
-        addressFloorApt: _selectedAddressId == null && _floorAptController.text.trim().isNotEmpty
-            ? _floorAptController.text.trim()
-            : null,
-        addressReference: _selectedAddressId == null && _referenceController.text.trim().isNotEmpty
-            ? _referenceController.text.trim()
-            : null,
+        addressStreet: selectedAddress.addressStreet,
+        addressNumber: selectedAddress.addressNumber,
+        addressFloorApt: selectedAddress.addressFloorApt,
+        addressReference: selectedAddress.addressReference,
         hoursRequested: _hours,
         scheduledAtLocal: _scheduledAt!,
       );
@@ -492,5 +446,52 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
         setState(() => _submitting = false);
       }
     }
+  }
+}
+
+class _SelectedAddressSummaryCard extends StatelessWidget {
+  const _SelectedAddressSummaryCard({
+    required this.address,
+    this.districtName,
+  });
+
+  final UserAddress address;
+  final String? districtName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(Icons.home_outlined, size: 18),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    address.displayLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(address.fullAddress),
+                  if (districtName != null && districtName!.isNotEmpty)
+                    Text(
+                      districtName!,
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

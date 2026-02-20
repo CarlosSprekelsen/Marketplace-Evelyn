@@ -165,12 +165,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen>
                     onPressed: () {
                       final params = {
                         'district_id': request.districtId,
-                        'address_street': request.addressStreet,
-                        'address_number': request.addressNumber,
-                        if (request.addressFloorApt != null)
-                          'address_floor_apt': request.addressFloorApt!,
-                        if (request.addressReference != null)
-                          'address_reference': request.addressReference!,
                         'hours': request.hoursRequested.toString(),
                       };
                       final uri = Uri(path: '/client/request/new', queryParameters: params);
