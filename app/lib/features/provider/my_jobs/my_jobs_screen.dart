@@ -94,7 +94,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                               const SizedBox(height: 8),
                               Text('Fecha: ${formatDateTime(job.scheduledAt)}'),
                               Text(
-                                'Precio: ${job.priceTotal.toStringAsFixed(2)}',
+                                'Precio: ${formatPrice(job.priceTotal, job.currency)}',
                               ),
                               Text('Horas: ${job.hoursRequested}'),
                               if (job.client != null) ...[

@@ -95,6 +95,7 @@ describe('ServiceRequestsService', () => {
     });
     pricingService.getQuote.mockResolvedValue({
       price_total: 45,
+      currency: 'AED',
     });
     serviceRequestsRepository.save.mockResolvedValue({ id: 'request-1' });
     serviceRequestsRepository.findOne.mockResolvedValue({
@@ -116,6 +117,7 @@ describe('ServiceRequestsService', () => {
         client_id: 'client-1',
         district_id: 'district-1',
         status: ServiceRequestStatus.PENDING,
+        currency: 'AED',
       }),
     );
     expect(result).toEqual(expect.objectContaining({ id: 'request-1' }));
@@ -160,6 +162,7 @@ describe('ServiceRequestsService', () => {
         district: { name: 'Dubai Marina' },
         hours_requested: 2,
         price_total: '40.00',
+        currency: 'AED',
         scheduled_at: new Date('2099-03-01T10:00:00.000Z'),
         expires_at: new Date(Date.now() + 120000),
         address_street: 'Should not be returned',
@@ -174,6 +177,7 @@ describe('ServiceRequestsService', () => {
         id: 'request-1',
         district_name: 'Dubai Marina',
         hours_requested: 2,
+        currency: 'AED',
       }),
     );
     expect(available[0]).not.toHaveProperty('address_street');

@@ -98,6 +98,7 @@ export class ServiceRequestsService {
       address_longitude: addressLongitude,
       hours_requested: dto.hours_requested,
       price_total: quote.price_total,
+      currency: quote.currency ?? 'AED',
       scheduled_at: scheduledAt,
       status: ServiceRequestStatus.PENDING,
       expires_at: expiresAt,
@@ -138,6 +139,7 @@ export class ServiceRequestsService {
         district_name: request.district?.name ?? '',
         hours_requested: request.hours_requested,
         price_total: this.toNumber(request.price_total),
+        currency: request.currency ?? 'AED',
         scheduled_at: request.scheduled_at,
         expires_at: request.expires_at,
         time_remaining_seconds: Math.max(

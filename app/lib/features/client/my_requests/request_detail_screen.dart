@@ -114,7 +114,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen>
         children: [
           _row('Estado', request.status.value),
           _row('Distrito', request.district?.name ?? request.districtId),
-          _row('Precio', request.priceTotal.toStringAsFixed(2)),
+          _row('Precio', formatPrice(request.priceTotal, request.currency)),
           _row('Direccion', request.fullAddress),
           _row('Fecha', formatDateTime(request.scheduledAt)),
           if (request.status == ServiceRequestStatus.pending)

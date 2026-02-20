@@ -105,6 +105,13 @@ export class ServiceRequest {
   price_total: number;
 
   @ApiProperty({
+    description: 'ISO 4217 currency code',
+    example: 'AED',
+  })
+  @Column({ type: 'varchar', length: 3, default: 'AED' })
+  currency: string;
+
+  @ApiProperty({
     description: 'Scheduled date and time (UTC)',
     example: '2026-03-01T10:00:00.000Z',
   })

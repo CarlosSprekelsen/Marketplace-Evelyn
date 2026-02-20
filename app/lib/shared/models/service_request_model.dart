@@ -34,6 +34,7 @@ class ServiceRequestModel {
     this.addressLongitude,
     required this.hoursRequested,
     required this.priceTotal,
+    required this.currency,
     required this.scheduledAt,
     required this.status,
     required this.expiresAt,
@@ -61,6 +62,7 @@ class ServiceRequestModel {
   final double? addressLongitude;
   final int hoursRequested;
   final double priceTotal;
+  final String currency;
   final DateTime scheduledAt;
   final ServiceRequestStatus status;
   final DateTime expiresAt;
@@ -104,6 +106,7 @@ class ServiceRequestModel {
           : null,
       hoursRequested: json['hours_requested'] as int,
       priceTotal: _toDouble(json['price_total']),
+      currency: json['currency'] as String? ?? 'AED',
       scheduledAt: DateTime.parse(json['scheduled_at'] as String),
       status: ServiceRequestStatus.fromString(json['status'] as String),
       expiresAt: DateTime.parse(json['expires_at'] as String),
@@ -126,6 +129,9 @@ class ServiceRequestModel {
     );
   }
 }
+
+String formatPrice(double amount, [String currency = 'AED']) =>
+    '$currency ${amount.toStringAsFixed(2)}';
 
 DateTime? _parseDateTime(dynamic value) {
   if (value == null) {

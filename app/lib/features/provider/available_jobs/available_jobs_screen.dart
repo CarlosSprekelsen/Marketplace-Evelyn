@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/provider_available_job.dart';
+import '../../../shared/models/service_request_model.dart';
 import '../../../shared/utils/date_formatter.dart';
 import '../state/provider_jobs_providers.dart';
 
@@ -119,7 +120,7 @@ class _AvailableJobsScreenState extends ConsumerState<AvailableJobsScreen>
                         ),
                         const SizedBox(height: 6),
                         Text('Horas: ${job.hoursRequested}'),
-                        Text('Precio: ${job.priceTotal.toStringAsFixed(2)}'),
+                        Text('Precio: ${formatPrice(job.priceTotal, job.currency)}'),
                         Text('Fecha: ${formatDateTime(job.scheduledAt)}'),
                         Text('Expira en: $remaining'),
                         const SizedBox(height: 10),

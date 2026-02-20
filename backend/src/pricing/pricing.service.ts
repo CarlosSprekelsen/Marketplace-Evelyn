@@ -49,6 +49,7 @@ export class PricingService {
       hours,
       price_per_hour: pricePerHour,
       price_total: Number((pricePerHour * hours).toFixed(2)),
+      currency: rule.currency ?? 'AED',
     };
   }
 

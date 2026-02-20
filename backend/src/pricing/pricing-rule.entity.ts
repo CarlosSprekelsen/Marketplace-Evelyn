@@ -43,6 +43,13 @@ export class PricingRule {
   price_per_hour: number;
 
   @ApiProperty({
+    description: 'ISO 4217 currency code',
+    example: 'AED',
+  })
+  @Column({ type: 'varchar', length: 3, default: 'AED' })
+  currency: string;
+
+  @ApiProperty({
     description: 'Minimum hours',
     example: 1,
   })

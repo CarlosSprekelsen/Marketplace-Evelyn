@@ -4,6 +4,7 @@ class ProviderAvailableJob {
     required this.districtName,
     required this.hoursRequested,
     required this.priceTotal,
+    required this.currency,
     required this.scheduledAt,
     required this.expiresAt,
     required this.timeRemainingSeconds,
@@ -13,6 +14,7 @@ class ProviderAvailableJob {
   final String districtName;
   final int hoursRequested;
   final double priceTotal;
+  final String currency;
   final DateTime scheduledAt;
   final DateTime expiresAt;
   final int timeRemainingSeconds;
@@ -23,6 +25,7 @@ class ProviderAvailableJob {
       districtName: json['district_name'] as String,
       hoursRequested: json['hours_requested'] as int,
       priceTotal: _toDouble(json['price_total']),
+      currency: json['currency'] as String? ?? 'AED',
       scheduledAt: DateTime.parse(json['scheduled_at'] as String),
       expiresAt: DateTime.parse(json['expires_at'] as String),
       timeRemainingSeconds: json['time_remaining_seconds'] as int,

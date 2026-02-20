@@ -106,7 +106,7 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> with Widget
                         ),
                         title: Text(request.district?.name ?? 'Distrito ${request.districtId}'),
                         subtitle: Text(
-                          '${formatDateTime(request.scheduledAt)} · \$${request.priceTotal.toStringAsFixed(2)}',
+                          '${formatDateTime(request.scheduledAt)} · ${formatPrice(request.priceTotal, request.currency)}',
                         ),
                         trailing: _StatusChip(status: request.status),
                         onTap: () => context.push('/client/requests/${request.id}'),

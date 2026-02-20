@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/price_quote.dart';
+import '../../../shared/models/service_request_model.dart';
 import '../../../shared/utils/date_formatter.dart';
 import '../../auth/state/auth_notifier.dart';
 import '../addresses/address_picker_widget.dart';
@@ -325,12 +326,12 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${_quote!.hours} hora${_quote!.hours == 1 ? '' : 's'} x \$${_quote!.pricePerHour.toStringAsFixed(2)}/hora',
+                              '${_quote!.hours} hora${_quote!.hours == 1 ? '' : 's'} x ${formatPrice(_quote!.pricePerHour, _quote!.currency)}/hora',
                               style: const TextStyle(fontSize: 15),
                             ),
                             const Divider(height: 20),
                             Text(
-                              'Total: \$${_quote!.priceTotal.toStringAsFixed(2)}',
+                              'Total: ${formatPrice(_quote!.priceTotal, _quote!.currency)}',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

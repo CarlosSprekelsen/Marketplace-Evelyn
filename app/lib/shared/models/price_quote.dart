@@ -5,6 +5,7 @@ class PriceQuote {
     required this.hours,
     required this.pricePerHour,
     required this.priceTotal,
+    required this.currency,
   });
 
   final String districtId;
@@ -12,6 +13,7 @@ class PriceQuote {
   final int hours;
   final double pricePerHour;
   final double priceTotal;
+  final String currency;
 
   factory PriceQuote.fromJson(Map<String, dynamic> json) {
     final district = json['district'] as Map<String, dynamic>;
@@ -21,6 +23,7 @@ class PriceQuote {
       hours: json['hours'] as int,
       pricePerHour: _toDouble(json['price_per_hour']),
       priceTotal: _toDouble(json['price_total']),
+      currency: json['currency'] as String? ?? 'AED',
     );
   }
 }

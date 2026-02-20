@@ -26,6 +26,7 @@ describe('PricingService', () => {
       min_hours: 1,
       max_hours: 8,
       price_per_hour: 15,
+      currency: 'AED',
     });
 
     const result = await service.getQuote('district-1', 3);
@@ -35,6 +36,7 @@ describe('PricingService', () => {
       hours: 3,
       price_per_hour: 15,
       price_total: 45,
+      currency: 'AED',
     });
   });
 
