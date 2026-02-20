@@ -85,7 +85,7 @@ export class ServiceRequestsService {
     }
 
     const quote = await this.pricingService.getQuote(dto.district_id, dto.hours_requested);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
 
     const request = this.serviceRequestsRepository.create({
       client_id: client.id,
