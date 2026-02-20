@@ -1,7 +1,7 @@
 name: marketplace_app
 description: Marketplace de limpieza por horas - App móvil
 publish_to: 'none'
-version: 1.2.2+5
+version: 1.2.3+6
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
@@ -29,6 +29,7 @@ dependencies:
 
   # Maps
   google_maps_flutter: ^2.14.2
+  geolocator: ^13.0.2
 
   # Routing
   go_router: ^17.1.0

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../config/environment.dart';
@@ -368,6 +369,10 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
     _latitude = e?.latitude ?? _defaultLatitude;
     _longitude = e?.longitude ?? _defaultLongitude;
     _isDefault = e?.isDefault ?? false;
+
+    if (widget.existing == null) {
+      _fetchCurrentLocation();
+    }
   }
 
   @override
@@ -674,6 +679,35 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
       );
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+      });
+    } catch (_) {
+      // Keep default coordinates silently if location is unavailable.
     }
   }
 }
