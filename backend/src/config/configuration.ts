@@ -17,6 +17,12 @@ export default () => ({
   cors: {
     origins: process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:8080',
   },
+  firebase: {
+    projectId: process.env.FIREBASE_PROJECT_ID || '',
+    serviceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '',
+    serviceAccountBase64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '',
+    serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '',
+  },
   fcm: {
     serverKey: process.env.FCM_SERVER_KEY || '',
   },
