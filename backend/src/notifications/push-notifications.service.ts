@@ -30,7 +30,7 @@ export class PushNotificationsService {
 
     const serverKey = this.configService.get<string>('fcm.serverKey')?.trim() ?? '';
     if (serverKey.length === 0) {
-      this.logger.debug('Skipping push notification because FCM_SERVER_KEY is not configured.');
+      this.logger.warn('Skipping push notification because FCM_SERVER_KEY is not configured.');
       return;
     }
 
@@ -67,7 +67,10 @@ export class PushNotificationsService {
       if (!response.ok) {
         const body = await response.text();
         this.logger.warn(`FCM request failed (${response.status}): ${body}`);
+        return;
       }
+
+      this.logger.log(`FCM sent to ${tokens.length} device(s).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(`FCM request error: ${message}`);

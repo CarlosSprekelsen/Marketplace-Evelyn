@@ -511,6 +511,13 @@ export class ServiceRequestsService {
         select: ['id', 'fcm_token'],
       });
 
+      if (providers.length === 0) {
+        this.logger.warn(
+          `No eligible providers with FCM token found for request ${request.id} in district ${request.district_id}.`,
+        );
+        return;
+      }
+
       await this.pushNotificationsService.sendToTokens(
         providers.map((provider) => provider.fcm_token),
         {

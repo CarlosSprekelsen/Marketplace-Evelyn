@@ -49,6 +49,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
       CORS_ORIGINS: ${CORS_ORIGINS:-https://claudiasrv.duckdns.org}
+      FCM_SERVER_KEY: ${FCM_SERVER_KEY:-}
     ports:
       - "127.0.0.1:3000:3000"
     networks:
