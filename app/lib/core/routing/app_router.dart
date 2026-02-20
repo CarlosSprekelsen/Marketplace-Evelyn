@@ -22,6 +22,8 @@ import '../../features/client/addresses/addresses_screen.dart';
 import '../../features/legal/presentation/legal_document_screen.dart';
 import '../../shared/models/user.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefreshNotifier();
   ref.listen<AuthState>(authNotifierProvider, (previous, next) {
@@ -30,6 +32,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: refresh,
     routes: [
@@ -76,12 +79,48 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               'de los casos necesarios para prestar el servicio o cumplir obligaciones legales.',
         ),
       ),
-      GoRoute(
-        path: '/client/home',
-        builder: (context, state) => const ClientHomeScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return ClientShell(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/client/home',
+                builder: (context, state) => const ClientHomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/client/requests',
+                builder: (context, state) => const MyRequestsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => RequestDetailScreen(
+                      requestId: state.pathParameters['id'] ?? '',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/client/addresses',
+                builder: (context, state) => const AddressesScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/client/request/new',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final qp = state.uri.queryParameters;
           return RequestFormScreen(
@@ -91,42 +130,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/client/requests',
-        builder: (context, state) => const MyRequestsScreen(),
-      ),
-      GoRoute(
-        path: '/client/requests/:id',
-        builder: (context, state) => RequestDetailScreen(
-          requestId: state.pathParameters['id'] ?? '',
-        ),
-      ),
-      GoRoute(
-        path: '/client/addresses',
-        builder: (context, state) => const AddressesScreen(),
-      ),
-      GoRoute(
         path: '/client/recurring',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const MyRecurringScreen(),
       ),
       GoRoute(
         path: '/client/recurring/new',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const RecurringFormScreen(),
       ),
-      GoRoute(
-        path: '/provider/home',
-        builder: (context, state) => const ProviderHomeScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return ProviderShell(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/provider/home',
+                builder: (context, state) => const ProviderHomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/provider/jobs/available',
+                builder: (context, state) => const AvailableJobsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/provider/jobs/mine',
+                builder: (context, state) => const MyJobsScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/admin/home',
         builder: (context, state) => const AdminHomeScreen(),
-      ),
-      GoRoute(
-        path: '/provider/jobs/available',
-        builder: (context, state) => const AvailableJobsScreen(),
-      ),
-      GoRoute(
-        path: '/provider/jobs/mine',
-        builder: (context, state) => const MyJobsScreen(),
       ),
     ],
     redirect: (context, state) {

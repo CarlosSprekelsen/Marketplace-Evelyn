@@ -54,12 +54,12 @@ class _ProviderHomeScreenState extends ConsumerState<ProviderHomeScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () => context.push('/provider/jobs/available'),
+              onPressed: () => context.go('/provider/jobs/available'),
               child: const Text('Trabajos Disponibles'),
             ),
             const SizedBox(height: 10),
             OutlinedButton(
-              onPressed: () => context.push('/provider/jobs/mine'),
+              onPressed: () => context.go('/provider/jobs/mine'),
               child: const Text('Mis Trabajos'),
             ),
           ],
@@ -86,5 +86,41 @@ class _ProviderHomeScreenState extends ConsumerState<ProviderHomeScreen> {
         setState(() => _toggling = false);
       }
     }
+  }
+}
+
+class ProviderShell extends StatelessWidget {
+  const ProviderShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) {
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Disponibles',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.work),
+            label: 'Mis Trabajos',
+          ),
+        ],
+      ),
+    );
   }
 }

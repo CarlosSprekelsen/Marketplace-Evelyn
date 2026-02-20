@@ -39,7 +39,7 @@ class ClientHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             OutlinedButton(
-              onPressed: () => context.push('/client/requests'),
+              onPressed: () => context.go('/client/requests'),
               child: const Text('Mis Solicitudes'),
             ),
             const SizedBox(height: 10),
@@ -50,12 +50,48 @@ class ClientHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
-              onPressed: () => context.push('/client/addresses'),
+              onPressed: () => context.go('/client/addresses'),
               icon: const Icon(Icons.location_on),
               label: const Text('Mis Direcciones'),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ClientShell extends StatelessWidget {
+  const ClientShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) {
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt),
+            label: 'Solicitudes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.place),
+            label: 'Direcciones',
+          ),
+        ],
       ),
     );
   }
