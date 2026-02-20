@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Pricing</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #1a1a1a;
+      }
+      header {
+        background: #0f172a;
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      nav a {
+        color: #c7d2fe;
+        text-decoration: none;
+        margin-right: 14px;
+      }
+      nav a:last-child {
+        margin-right: 0;
+      }
+      .content {
+        max-width: 1120px;
+        margin: 20px auto;
+        padding: 0 16px;
+      }
+      .notice {
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+      .notice.success {
+        background: #e7f4eb;
+        border: 1px solid #a8d5b5;
+      }
+      .notice.error {
+        background: #fdecec;
+        border: 1px solid #efb5b5;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid #dfe3ea;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #edf1f7;
+        text-align: left;
+        vertical-align: middle;
+      }
+      th {
+        background: #f8fafc;
+      }
+      input {
+        box-sizing: border-box;
+        padding: 7px 9px;
+        border-radius: 8px;
+        border: 1px solid #c7ced8;
+      }
+      input.price {
+        width: 110px;
+      }
+      input.currency {
+        width: 78px;
+        text-transform: uppercase;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        background: #0b5ed7;
+        color: #fff;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .admin-email {
+        font-size: 13px;
+        color: #c7d2fe;
+      }
+      .hint {
+        color: #5c6370;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/admin-web/dashboard">Dashboard</a>
+        <a href="/admin-web/pricing">Pricing</a>
+        <a href="/admin-web/users">Users</a>
+      </nav>
+      <div>
+        <div class="admin-email">{{adminEmail}}</div>
+        <form method="post" action="/admin-web/logout">
+          <button type="submit">Logout</button>
+        </form>
+      </div>
+    </header>
+    <main class="content">
+      <h1>Pricing Rules</h1>
+      <p class="hint">Currency must be a 3-letter ISO code such as AED, USD, EUR.</p>
+      {{#if successMessage}}
+        <div class="notice success">{{successMessage}}</div>
+      {{/if}}
+      {{#if errorMessage}}
+        <div class="notice error">{{errorMessage}}</div>
+      {{/if}}
+      <table>
+        <thead>
+          <tr>
+            <th>District</th>
+            <th>Price/Hour</th>
+            <th>Currency</th>
+            <th>Min Hours</th>
+            <th>Max Hours</th>
+            <th>Active</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each rules}}
+            <tr>
+              <td>{{this.districtName}}</td>
+              <td>
+                <input
+                  class="price"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  name="price_per_hour"
+                  value="{{this.pricePerHour}}"
+                  form="pricing-{{this.id}}"
+                  required
+                />
+              </td>
+              <td>
+                <input
+                  class="currency"
+                  maxlength="3"
+                  name="currency"
+                  value="{{this.currency}}"
+                  form="pricing-{{this.id}}"
+                  required
+                />
+              </td>
+              <td>{{this.minHours}}</td>
+              <td>{{this.maxHours}}</td>
+              <td>{{#if this.isActive}}Yes{{else}}No{{/if}}</td>
+              <td>
+                <form id="pricing-{{this.id}}" method="post" action="/admin-web/pricing/{{this.id}}">
+                  <button type="submit">Save</button>
+                </form>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>

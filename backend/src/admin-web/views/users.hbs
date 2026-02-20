@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Users</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #1a1a1a;
+      }
+      header {
+        background: #0f172a;
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      nav a {
+        color: #c7d2fe;
+        text-decoration: none;
+        margin-right: 14px;
+      }
+      nav a:last-child {
+        margin-right: 0;
+      }
+      .content {
+        max-width: 1120px;
+        margin: 20px auto;
+        padding: 0 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid #dfe3ea;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #edf1f7;
+        text-align: left;
+        vertical-align: middle;
+      }
+      th {
+        background: #f8fafc;
+      }
+      select,
+      button {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #c7ced8;
+        background: #fff;
+      }
+      .filter {
+        margin-bottom: 12px;
+      }
+      .admin-email {
+        font-size: 13px;
+        color: #c7d2fe;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/admin-web/dashboard">Dashboard</a>
+        <a href="/admin-web/pricing">Pricing</a>
+        <a href="/admin-web/users">Users</a>
+      </nav>
+      <div>
+        <div class="admin-email">{{adminEmail}}</div>
+        <form method="post" action="/admin-web/logout">
+          <button type="submit">Logout</button>
+        </form>
+      </div>
+    </header>
+    <main class="content">
+      <h1>Users</h1>
+      <form class="filter" method="get" action="/admin-web/users">
+        <label for="role">Role:</label>
+        <select id="role" name="role">
+          <option value="" {{#unless selectedRole}}selected{{/unless}}>All</option>
+          <option value="CLIENT" {{#if selectedClient}}selected{{/if}}>CLIENT</option>
+          <option value="PROVIDER" {{#if selectedProvider}}selected{{/if}}>PROVIDER</option>
+          <option value="ADMIN" {{#if selectedAdmin}}selected{{/if}}>ADMIN</option>
+        </select>
+        <button type="submit">Apply</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>District</th>
+            <th>Verified</th>
+            <th>Blocked</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each users}}
+            <tr>
+              <td>{{this.fullName}}</td>
+              <td>{{this.email}}</td>
+              <td>{{this.role}}</td>
+              <td>{{this.districtName}}</td>
+              <td>{{this.isVerified}}</td>
+              <td>{{this.isBlocked}}</td>
+              <td>{{this.createdAt}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>

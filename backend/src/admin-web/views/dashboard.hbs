@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #1a1a1a;
+      }
+      header {
+        background: #0f172a;
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      nav a {
+        color: #c7d2fe;
+        text-decoration: none;
+        margin-right: 14px;
+      }
+      nav a:last-child {
+        margin-right: 0;
+      }
+      .content {
+        max-width: 960px;
+        margin: 20px auto;
+        padding: 0 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dfe3ea;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .card h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        color: #5c6370;
+      }
+      .card p {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid #dfe3ea;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 14px;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #edf1f7;
+        text-align: left;
+      }
+      th {
+        background: #f8fafc;
+      }
+      form {
+        margin: 0;
+      }
+      button {
+        border: 1px solid #c7ced8;
+        border-radius: 8px;
+        background: #fff;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .admin-email {
+        font-size: 13px;
+        color: #c7d2fe;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/admin-web/dashboard">Dashboard</a>
+        <a href="/admin-web/pricing">Pricing</a>
+        <a href="/admin-web/users">Users</a>
+      </nav>
+      <div>
+        <div class="admin-email">{{adminEmail}}</div>
+        <form method="post" action="/admin-web/logout">
+          <button type="submit">Logout</button>
+        </form>
+      </div>
+    </header>
+    <main class="content">
+      <div class="grid">
+        <section class="card">
+          <h2>Total Users</h2>
+          <p>{{totalUsers}}</p>
+        </section>
+        <section class="card">
+          <h2>Pending Providers</h2>
+          <p>{{pendingProviders}}</p>
+        </section>
+        <section class="card">
+          <h2>Total Requests</h2>
+          <p>{{totalRequests}}</p>
+        </section>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each requestsByStatus}}
+            <tr>
+              <td>{{this.status}}</td>
+              <td>{{this.count}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>

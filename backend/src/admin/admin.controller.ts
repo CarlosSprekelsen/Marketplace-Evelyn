@@ -19,6 +19,8 @@ import { SetUserBlockedDto } from './dto/set-user-blocked.dto';
 import { ServiceRequestsService } from '../service-requests/service-requests.service';
 import { SetRequestStatusDto } from './dto/set-request-status.dto';
 import { AdminResetPasswordDto } from './dto/admin-reset-password.dto';
+import { PricingService } from '../pricing/pricing.service';
+import { UpdatePricingRuleDto } from './dto/update-pricing-rule.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -29,6 +31,7 @@ export class AdminController {
   constructor(
     private readonly usersService: UsersService,
     private readonly serviceRequestsService: ServiceRequestsService,
+    private readonly pricingService: PricingService,
   ) {}
 
   @Get('users')
@@ -86,6 +89,15 @@ export class AdminController {
       dto.status,
       dto.cancellation_reason ?? `Admin update by ${req.user.id}`,
     );
+  }
+
+  @Patch('pricing-rules/:id')
+  @ApiOperation({ summary: 'Update pricing rule (price and optional currency)' })
+  async updatePricingRule(@Param('id') id: string, @Body() dto: UpdatePricingRuleDto) {
+    return this.pricingService.updatePricingRuleById(id, {
+      price_per_hour: dto.price_per_hour,
+      currency: dto.currency,
+    });
   }
 
   private sanitizeUser(user: Record<string, any>) {

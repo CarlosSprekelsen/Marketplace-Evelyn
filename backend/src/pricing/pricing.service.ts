@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PricingRule } from './pricing-rule.entity';
@@ -50,6 +50,65 @@ export class PricingService {
       price_per_hour: pricePerHour,
       price_total: Number((pricePerHour * hours).toFixed(2)),
       currency: rule.currency ?? 'AED',
+    };
+  }
+
+  async listRulesForAdmin() {
+    const rules = await this.pricingRulesRepository.find({
+      relations: ['district'],
+    });
+
+    return rules
+      .map((rule) => ({
+        ...rule,
+        price_per_hour: this.toNumber(rule.price_per_hour),
+        currency: (rule.currency ?? 'AED').toUpperCase(),
+      }))
+      .sort((a, b) => {
+        const districtA = a.district?.name?.toLowerCase() ?? '';
+        const districtB = b.district?.name?.toLowerCase() ?? '';
+        return districtA.localeCompare(districtB);
+      });
+  }
+
+  async updatePricingRuleById(
+    id: string,
+    dto: {
+      price_per_hour: number;
+      currency?: string;
+    },
+  ) {
+    if (!Number.isFinite(dto.price_per_hour) || dto.price_per_hour <= 0) {
+      throw new BadRequestException('price_per_hour must be greater than 0');
+    }
+
+    const rule = await this.pricingRulesRepository.findOne({
+      where: { id },
+      relations: ['district'],
+    });
+    if (!rule) {
+      throw new NotFoundException('Pricing rule not found');
+    }
+
+    rule.price_per_hour = Number(dto.price_per_hour.toFixed(2));
+    if (dto.currency !== undefined) {
+      rule.currency = dto.currency.trim().toUpperCase();
+    }
+
+    await this.pricingRulesRepository.save(rule);
+
+    const updated = await this.pricingRulesRepository.findOne({
+      where: { id: rule.id },
+      relations: ['district'],
+    });
+    if (!updated) {
+      throw new NotFoundException('Pricing rule not found');
+    }
+
+    return {
+      ...updated,
+      price_per_hour: this.toNumber(updated.price_per_hour),
+      currency: (updated.currency ?? 'AED').toUpperCase(),
     };
   }
 

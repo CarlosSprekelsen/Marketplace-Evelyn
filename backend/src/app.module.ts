@@ -16,6 +16,7 @@ import { ServiceRequestsModule } from './service-requests/service-requests.modul
 import { AdminModule } from './admin/admin.module';
 import { RecurringRequestsModule } from './recurring-requests/recurring-requests.module';
 import { UserAddressesModule } from './user-addresses/user-addresses.module';
+import { AdminWebModule } from './admin-web/admin-web.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { UserAddressesModule } from './user-addresses/user-addresses.module';
     PricingModule,
     ServiceRequestsModule,
     AdminModule,
+    AdminWebModule,
     RecurringRequestsModule,
     UserAddressesModule,
   ],
