@@ -52,6 +52,7 @@ app/lib/generated_plugin_registrant.dart
 /app/android/app/debug
 /app/android/app/profile
 /app/android/app/release
+/app/android/app/google-services.json
 *.jks
 *.keystore
 **/key.properties
@@ -105,3 +106,4 @@ coverage/
 *.backup
 infra/backups/
 infra/.env.production
+FIREBASE_KEYS_PRIVATE.local.md

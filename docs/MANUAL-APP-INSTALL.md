@@ -40,7 +40,7 @@ Links oficiales:
 ### 0.2 Restricciones recomendadas
 
 - Para Android Maps SDK: restringir por Android app
-  - Package name: `com.marketplace`
+  - Package name: `com.evelyn.marketplace`
   - SHA-1/SHA-256 de tu keystore (debug o release)
 - Para Static Maps: restringir por API (Static Maps API)
 
@@ -72,7 +72,7 @@ cd ~/Marketplace-Evelyn/app
 MAPS_KEY="PEGAR_AQUI_TU_GOOGLE_MAPS_API_KEY"
 
 # Build release APK apuntando al backend de produccion
-flutter build apk --release \
+MAPS_API_KEY="$MAPS_KEY" flutter build apk --release \
   --dart-define=API_BASE_URL=https://claudiasrv.duckdns.org \
   --dart-define=ENV=production \
   --dart-define=GOOGLE_MAPS_API_KEY="$MAPS_KEY"
@@ -264,7 +264,7 @@ git pull origin main
 MAPS_KEY="PEGAR_AQUI_TU_GOOGLE_MAPS_API_KEY"
 
 # Rebuild
-flutter build apk --release \
+MAPS_API_KEY="$MAPS_KEY" flutter build apk --release \
   --dart-define=API_BASE_URL=https://claudiasrv.duckdns.org \
   --dart-define=ENV=production \
   --dart-define=GOOGLE_MAPS_API_KEY="$MAPS_KEY"
@@ -325,7 +325,7 @@ El cliente debe crear una nueva solicitud.
 4. Si el problema persiste, correr logcat en la PC local (no en VPS por SSH):
    ```bash
    adb logcat -c
-   adb logcat | rg -n "FATAL EXCEPTION|AndroidRuntime|Google Maps|com.marketplace"
+   adb logcat | rg -n "FATAL EXCEPTION|AndroidRuntime|Google Maps|com.evelyn.marketplace"
    ```
 
 ### Olvide la password de mi cuenta

@@ -376,7 +376,7 @@ Tarea 0.4: Crear las 5 entidades con migraciones
 
 ```
 Tarea 0.5: Scaffold Flutter app
-- flutter create app --org com.marketplace
+- flutter create app --org com.evelyn.marketplace
 - Agregar dependencias: dio, flutter_riverpod, flutter_secure_storage, go_router
 - Crear estructura de carpetas feature-first
 - Crear DioClient con baseUrl configurable (env variable)

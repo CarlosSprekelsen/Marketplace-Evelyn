@@ -13,7 +13,7 @@
 - ✅ `flutter test` - OK
 - ✅ `flutter analyze` - OK
 - ✅ `flutter build apk --debug` - OK (app-debug.apk generated)
-- ✅ Android package renamed to `com.marketplace`
+- ✅ Android package renamed to `com.evelyn.marketplace`
   - build.gradle.kts (line 9, 24)
   - MainActivity.kt (line 1)
 - ✅ Placeholder login app/test aligned
