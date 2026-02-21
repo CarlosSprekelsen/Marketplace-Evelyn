@@ -6,6 +6,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 val keystoreProperties = Properties()
@@ -14,8 +15,21 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+val mapsApiKey =
+    (project.findProperty("MAPS_API_KEY") as String?)
+        ?.takeIf { it.isNotBlank() }
+        ?: System.getenv("MAPS_API_KEY")?.takeIf { it.isNotBlank() }
+        ?: localProperties.getProperty("MAPS_API_KEY")?.takeIf { it.isNotBlank() }
+        ?: ""
+
 android {
-    namespace = "com.marketplace"
+    namespace = "com.evelyn.marketplace"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,11 +43,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.marketplace"
+        applicationId = "com.evelyn.marketplace"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     signingConfigs {
