@@ -370,6 +370,8 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
   late double _longitude;
   bool _isDefault = false;
   bool _saving = false;
+  bool _locatingMe = false;
+  GoogleMapController? _mapController;
 
   @override
   void initState() {
@@ -393,6 +395,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
 
   @override
   void dispose() {
+    _mapController?.dispose();
     _labelCustomCtrl.dispose();
     _streetCtrl.dispose();
     _numberCtrl.dispose();
@@ -549,6 +552,9 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                         target: LatLng(_latitude, _longitude),
                         zoom: 15,
                       ),
+                      onMapCreated: (controller) {
+                        _mapController = controller;
+                      },
                       markers: {
                         Marker(
                           markerId: const MarkerId('address_pin'),
@@ -606,6 +612,21 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
                   message:
                       'Mapa no disponible. Configura GOOGLE_MAPS_API_KEY para habilitar el pin.',
                 ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: _locatingMe ? null : _onLocateMePressed,
+                  icon: _locatingMe
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.my_location),
+                  label: Text(_locatingMe ? 'Ubicando...' : 'Usar mi ubicacion'),
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Lat: ${_latitude.toStringAsFixed(6)} · '
@@ -702,6 +723,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        _showLocationMessage('Activa el GPS para usar tu ubicacion actual.');
         return;
       }
 
@@ -711,6 +733,7 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
+        _showLocationMessage('Debes permitir acceso a ubicacion para continuar.');
         return;
       }
 
@@ -722,8 +745,30 @@ class _AddressFormSheetState extends ConsumerState<_AddressFormSheet> {
         _latitude = position.latitude;
         _longitude = position.longitude;
       });
+      if (_interactiveMapEnabled && _mapController != null) {
+        await _mapController!.animateCamera(
+          CameraUpdate.newLatLng(LatLng(_latitude, _longitude)),
+        );
+      }
+      _showLocationMessage('Ubicacion actualizada.');
     } catch (_) {
-      // Keep default coordinates silently if location is unavailable.
+      _showLocationMessage('No se pudo obtener tu ubicacion actual.');
     }
+  }
+
+  Future<void> _onLocateMePressed() async {
+    setState(() => _locatingMe = true);
+    await _fetchCurrentLocation();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _locatingMe = false);
+  }
+
+  void _showLocationMessage(String message) {
+    if (!_locatingMe || !mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 }
