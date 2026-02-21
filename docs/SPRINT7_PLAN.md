@@ -61,9 +61,9 @@ Example:
 |---|---|---|---|
 | 7.0 | Pre-sprint hardening and baseline validation | Completed | Commits: `6ac4b5b`, `b09524b`, `894e6a5` |
 | 7.1.1 | Foreground push visibility in app | Completed | Commit: `8c13e8b` |
-| 7.1.2 | Push observability counters + structured logs | Completed | Code + verification in this sprint update |
-| 7.1.3 | "Locate me" action in address map flow | Completed | Code + verification in this sprint update |
-| 7.2.1 | Homely visual foundation (theme/tokens + role accents) | Planned | Pending |
+| 7.1.2 | Push observability counters + structured logs | Completed | Commits: `3dbbfc1`, `02ff4c5` |
+| 7.1.3 | "Locate me" action in address map flow | Completed | Commit: `1bb3dc2` |
+| 7.2.1 | Homely visual foundation (theme/tokens + role accents) | Next | Start here next |
 | 7.2.2 | UI revamp of key screens (auth, homes, jobs/requests, addresses) | Planned | Pending |
 | 7.3.1 | Google Sign-In for CLIENT and PROVIDER | Planned | Pending |
 | 7.3.2 | ES/EN selector and core flow translations | Planned | Pending |
