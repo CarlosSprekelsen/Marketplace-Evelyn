@@ -83,7 +83,7 @@ IN_PROGRESS → CANCELLED  (admin only)
 - All timestamps UTC in DB and backend — Flutter converts to local for display only
 - `setVerified()` validates `role === PROVIDER` before updating; sends FCM notification
 - `setBlocked()` sends FCM notification on block/unblock; guards null `fcm_token`
-- Push observability is exposed to admins at `GET /admin/ops/push-observability` (in-memory counters + recent delivery events)
+- Push observability is exposed to admins at `GET /ops/push-observability` (in-memory counters + recent delivery events)
 
 ## Flutter Conventions
 

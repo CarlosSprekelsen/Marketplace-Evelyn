@@ -85,7 +85,7 @@ Implemented lightweight observability in backend push pipeline.
 - Structured push delivery logs with context/transport/success/failure.
 - In-memory counters by transport (`http_v1`, `legacy`, skipped reasons).
 - Context counters for business events (new request, accepted request, account state changes).
-- New admin endpoint: `GET /admin/ops/push-observability`
+- New admin-only endpoint: `GET /ops/push-observability`
 
 Files:
 - `backend/src/notifications/push-notifications.service.ts`
