@@ -1,239 +1,281 @@
-# Sprint 7 — Homely Rebrand, Reliability, and Growth Foundations
+# Sprint 7 - Homely Rebrand, Reliability, and Growth Foundations
 
-**Goal:** Start the Homely product identity while improving operational reliability (especially push visibility), and laying growth foundations (Google Sign-In + ES/EN localization core flows) without breaking current production behavior.
+## Goal
+Ship a reliable, testable Sprint 7 baseline that:
+1. closes reliability gaps from Sprint 6 (push visibility + map usability),
+2. starts the product-facing Homely rebrand,
+3. adds growth foundations (Google Sign-In + ES/EN core localization),
+without breaking current production behavior.
 
-**Definition of Done:**
-- Sprint 7 Phase 0 is executed and documented as completed (security hygiene, split commits, baseline validations).
-- `CLAUDE.md` is reviewed and aligned before Sprint 7 implementation tasks.
-- Sprint 7 execution tasks are clearly scoped so AI agents can implement one task per commit.
+## Definition of Done
+Sprint 7 is done only when all of the following are true:
+- All Sprint 7 tasks are marked complete in this file with evidence.
+- `CLAUDE.md` has been reviewed before each task and updated when decisions changed.
+- Backend tests pass in Docker (`13/13` suites expected baseline).
+- `flutter analyze` passes with zero issues.
+- Release APK is built, renamed with version/build/date naming, and install-tested.
 - No secrets are committed.
 
-**Mandatory AI Rule:** Before starting **any** Sprint 7 task, read root `CLAUDE.md`. If implementation reality changes any documented decisions, update `CLAUDE.md` in the same task flow before continuing.
+---
+
+## Mandatory AI Workflow (Non-Negotiable)
+Before starting any Sprint 7 task:
+1. Read root `CLAUDE.md`.
+2. Confirm task assumptions still match `CLAUDE.md`.
+3. If mismatch exists, update `CLAUDE.md` first, then continue implementation.
+
+After finishing each task:
+1. Run the task verification commands.
+2. Capture result in this file.
+3. Commit with one focused message (`sprint7: ...`).
+4. Do not start next task until verification passes.
+
+Rule: one task = one commit. No mixed commits.
 
 ---
 
-## Dev Environment
-
-**Host constraints:**
-- Node/npm are not installed on host for backend workflow.
-- Backend test/runtime actions must run via Docker.
-- Flutter commands run on host.
-
-**Compose rule:**
+## Sprint 7 Constraints
+- Backend commands run in Docker (host has no Node/npm workflow).
 - Use `docker compose` v2 syntax only.
-- Do not use legacy `docker-compose` v1.
-
-Useful baseline commands:
-
-```bash
-# Backend tests in Docker
-cd /home/carlossprekelsen/Marketplace-Evelyn
-docker run --rm -v "$PWD/backend:/app" -w /app node:22-alpine sh -lc "npm test -- --runInBand"
-
-# Flutter static check
-cd /home/carlossprekelsen/Marketplace-Evelyn/app
-flutter analyze
-```
+- Do not change Android package id/Firebase project ids in Sprint 7.
+- Do not introduce FCM legacy-first behavior; HTTP v1 remains the target path.
+- No secrets in git (`service-account.json`, private keys, `.env.production`, raw tokens).
 
 ---
 
-## How to Use This File
+## Versioning and Artifacts
+Source of truth: `app/pubspec.yaml`
+- Baseline at Sprint 7 start: `1.3.1+8`.
+- If mobile code changes and users need a new install, bump at least `buildNumber`.
+- APK naming for handoff:
+  - `homely-v<semver>-build<build>-YYYYMMDD-HHMM.apk`
 
-Execute Sprint 7 tasks in order.
-
-Before each task starts:
-1. Re-read `CLAUDE.md` (mandatory).
-2. Confirm this sprint file and `CLAUDE.md` are aligned.
-3. If misaligned, update `CLAUDE.md` first, then continue task execution.
-
-After each task:
-1. Run the verification commands listed in that task.
-2. Commit with one clear message (`sprint7: ...`).
-3. Keep `CLAUDE.md` updated if any decision/policy changed during the task.
-4. Move to next task only when verification passes.
-
-**Rule:** One task = one commit. Do not bundle unrelated changes.
+Example:
+- `homely-v1.3.2-build9-20260221-1810.apk`
 
 ---
 
-## CLAUDE.md Review (Mandatory Before Coding)
+## Sprint 7 Status Board
 
-Before implementing Sprint 7 tasks, AI agents MUST read root `CLAUDE.md` and verify these items:
-
-| Item in CLAUDE.md | Expected State | Verify Before Work |
-|---|---|---|
-| Current app version policy | `app/pubspec.yaml` is source of truth (`1.3.1+8` baseline) | YES |
-| Rebrand scope for Sprint 7 | Product-visible rename to **Homely**, no package/Firebase ID migration yet | YES |
-| Push channel | Firebase HTTP v1 path active, no new legacy path | YES |
-| Android package name | `com.evelyn.marketplace` remains unchanged in Sprint 7 | YES |
-| Build/deploy conventions | APK must be renamed, Compose v2 only, no destructive prod resets | YES |
-| Guardrails | No secrets in git, no destructive git commands, no unnecessary architecture jumps | YES |
-
-If any item is stale, update `CLAUDE.md` first or stop and resolve before implementation.
+| Task | Scope | Status | Evidence |
+|---|---|---|---|
+| 7.0 | Pre-sprint hardening and baseline validation | Completed | Commits: `6ac4b5b`, `b09524b`, `894e6a5` |
+| 7.1.1 | Foreground push visibility in app | Completed | Commit: `8c13e8b` |
+| 7.1.2 | Push observability counters + structured logs | Completed | Code + verification in this sprint update |
+| 7.1.3 | "Locate me" action in address map flow | Completed | Code + verification in this sprint update |
+| 7.2.1 | Homely visual foundation (theme/tokens + role accents) | Planned | Pending |
+| 7.2.2 | UI revamp of key screens (auth, homes, jobs/requests, addresses) | Planned | Pending |
+| 7.3.1 | Google Sign-In for CLIENT and PROVIDER | Planned | Pending |
+| 7.3.2 | ES/EN selector and core flow translations | Planned | Pending |
 
 ---
 
-## AI Implementation Guardrails
+## Completed Work Log
 
-### AI MUST do
-- Read `CLAUDE.md` before writing code.
-- Keep one task per commit with verification evidence.
-- Use split clean commits.
-- Keep secrets out of Git.
+### 7.0 - Phase 0 (Completed 2026-02-21)
+Security hygiene, split commits, baseline checks completed.
 
-### AI MUST NOT do
-- Do not commit private keys, service account JSON, `.env.production`, raw tokens, or similar secrets.
-- Do not change `applicationId` / package name / Firebase project identifiers in Sprint 7.
-- Do not add or reintroduce FCM legacy migration paths as primary flow.
-- Do not use destructive git commands (`reset --hard`, force checkout overwrite).
-- Do not ship broad UI rewrites in one commit; use incremental slices.
+### 7.1.1 - Foreground Push Visibility (Completed 2026-02-21)
+Implemented local notifications for FCM foreground messages.
+- App dependency: `flutter_local_notifications`
+- File: `app/lib/core/notifications/push_notifications_service.dart`
 
-### STOP and ask if
-- A task requires changing auth model for ADMIN users.
-- A task requires package/Firebase technical rebrand in same sprint.
-- A task conflicts with current production deployment guardrails.
+### 7.1.2 - Push Observability (Completed 2026-02-21)
+Implemented lightweight observability in backend push pipeline.
+- Structured push delivery logs with context/transport/success/failure.
+- In-memory counters by transport (`http_v1`, `legacy`, skipped reasons).
+- Context counters for business events (new request, accepted request, account state changes).
+- New admin endpoint: `GET /admin/ops/push-observability`
 
----
+Files:
+- `backend/src/notifications/push-notifications.service.ts`
+- `backend/src/admin/admin.controller.ts`
+- `backend/src/users/users.service.ts`
+- `backend/src/service-requests/service-requests.service.ts`
 
-## Current State Snapshot (Start of Sprint 7)
+### 7.1.3 - Locate Me in Address Flow (Completed 2026-02-21)
+Added explicit user action to recenter pin with current GPS location.
 
-- Sprint 6 hotfix baseline is active.
-- Version baseline in `app/pubspec.yaml`: `1.3.1+8`.
-- Fresh APK exists: `marketplace-evelyn-v1.3.1-build8-20260221-1445.apk`.
-- Push backend HTTP v1 path is configured and sending in acceptance flow.
-- Foreground push visual UX still needs hardening for provider app experience.
+Files:
+- `app/lib/features/client/addresses/addresses_screen.dart`
 
----
-
-## Sprint 7 Scope
-
-### 7.1 Reliability Track
-- [x] Add visible foreground local notification behavior for FCM on provider/client app when app is open. (Implemented 2026-02-21)
-- Add push observability (structured delivery logs and lightweight counters).
-- Add explicit "Locate me" button in map/address flow.
-
-### 7.2 Homely Brand + UI Revamp (Incremental)
-- Rebrand visible app name/text to Homely.
-- Introduce warm-homey design direction.
-- Introduce dual role accents (Client vs Provider) on shared design system.
-- Revamp key screens first: auth, role homes, jobs/requests lists, addresses.
-
-### 7.3 Growth Foundations
-- Add Google Sign-In for CLIENT and PROVIDER.
-- Keep ADMIN authentication as existing email/password path.
-- Add ES/EN selector and translate core flows first.
+Behavior:
+- New button: `Usar mi ubicacion`
+- Requests location permission if needed.
+- Updates lat/lng and animates map camera when interactive map is enabled.
+- Shows short feedback via snackbar for denied GPS/permission or success.
 
 ---
 
-## Phase 0 — Execution (Completed)
+## Remaining Sprint 7 Tasks (Execution Spec)
+
+## Task 7.2.1 - Homely Visual Foundation
 
 ### Objective
-Close pending pre-Sprint-7 work in safe commits, enforce security hygiene, and validate baseline quality before Sprint 7 coding.
+Create a reusable design base so UI revamp is consistent and incremental, not random per screen.
 
-### Checklist
-- [x] Security scan performed (no private keys found in tracked files).
-- [x] Sensitive local files protected by ignore rules.
-- [x] Pending repo changes grouped and committed in clean batches.
-- [x] Backend tests validated in Docker.
-- [x] Flutter analyze validated.
-- [x] Version/APK baseline verified.
+### Implementation Scope
+- Define app-level design tokens (colors, spacing, typography, radii, elevations).
+- Add role accents:
+  - CLIENT accent palette
+  - PROVIDER accent palette
+- Keep ADMIN flow functional with existing visual baseline.
 
-### Completed On
-- 2026-02-21
+### Files Expected
+- `app/lib/...` theme/design-system files (new or updated)
+- Shared UI primitives used by multiple screens
 
-### Evidence
+### Testability Requirements
+Automated:
+- `flutter analyze` passes.
 
-**Security / hygiene checks**
+Manual:
+- CLIENT and PROVIDER home screens display different accent treatment.
+- Text contrast remains readable across primary surfaces.
+- No visual regression that blocks form input or navigation.
 
-```bash
-rg -n "BEGIN PRIVATE KEY|private_key\"\s*:|FIREBASE_SERVICE_ACCOUNT_BASE64=|AIza..." -S .
-```
-
-Result summary:
-- No private key material found in tracked files.
-- `google-services.json` kept local-only and now ignored by `.gitignore`.
-
-**Phase 0 commit groups executed**
-
-1. `6ac4b5b` — `sprint7: align android package and firebase/maps build wiring`
-   - Android package consistency, Google services plugin wiring, manifest placeholder map key wiring.
-
-2. `b09524b` — `sprint7: harden docs and infra defaults for phase 0`
-   - `.gitignore` hardening, docs consistency updates, VPN allowlist update in Nginx.
-
-3. `894e6a5` — `sprint7: document firebase http v1 push runbook`
-   - Added/updated `PUSH_NOTIFICATIONS_GUIDE.md`.
-
-**Baseline validation commands**
-
-```bash
-# Backend
-cd /home/carlossprekelsen/Marketplace-Evelyn
-docker run --rm -v "$PWD/backend:/app" -w /app node:22-alpine sh -lc "npm test -- --runInBand"
-# Result: 13/13 suites, 99/99 tests passed
-
-# Flutter
-cd /home/carlossprekelsen/Marketplace-Evelyn/app
-flutter analyze
-# Result: No issues found
-```
-
-**Version / artifact verification**
-
-```bash
-rg -n "^version:" app/pubspec.yaml
-ls -lt app/build/app/outputs/flutter-apk | head
-```
-
-Result summary:
-- Version baseline confirmed: `1.3.1+8`.
-- Latest release artifact present with timestamped name.
-
-### Phase 0 Status
-
-**COMPLETED**
+### Exit Criteria
+- Design tokens are centralized and reused.
+- At least 2 role-based screens consume the new tokens.
+- No hardcoded ad-hoc color duplication in newly touched widgets.
 
 ---
 
-## Sprint 7 Final Verification Template
+## Task 7.2.2 - UI Revamp of Key Screens
 
-Run this before closing Sprint 7:
+### Objective
+Improve perceived quality and clarity of core user journeys without rewriting the whole app.
+
+### Screen Scope (minimum)
+- Auth screens
+- Client home + my requests list
+- Provider home + available jobs list
+- Addresses list/form
+
+### Implementation Rules
+- Keep existing business flow intact.
+- Do not change API contracts in this task.
+- Keep navigation structure stable unless a bug requires change.
+
+### Testability Requirements
+Automated:
+- `flutter analyze` passes.
+
+Manual:
+- New user can register/login and reach role home.
+- Client can create request from revamped flow.
+- Provider can see/accept jobs from revamped flow.
+- Address CRUD still works after styling changes.
+
+### Exit Criteria
+- All listed screens updated and consistent with 7.2.1 tokens.
+- No regression in request lifecycle actions.
+- Before/after screenshots collected for changed screens.
+
+---
+
+## Task 7.3.1 - Google Sign-In (CLIENT + PROVIDER)
+
+### Objective
+Add lower-friction onboarding while preserving current auth behavior.
+
+### Scope
+- Add Google Sign-In for CLIENT and PROVIDER.
+- Keep ADMIN login as email/password only.
+
+### Backend Requirements
+- Secure token verification and role-safe account linking.
+- No route that allows role escalation.
+
+### Testability Requirements
+Automated:
+- Backend auth tests updated for Google path.
+- Existing auth tests still pass.
+- `flutter analyze` passes.
+
+Manual:
+- New CLIENT can sign in with Google and receive CLIENT role only.
+- New PROVIDER can sign in with Google and receive PROVIDER role only.
+- Existing email/password accounts still log in.
+- ADMIN cannot authenticate through Google path.
+
+### Exit Criteria
+- Google auth works for both allowed roles.
+- Security guardrails validated (no unauthorized role upgrade).
+- Error handling messages are user-readable for canceled/failed login.
+
+---
+
+## Task 7.3.2 - ES/EN Localization Core Flows
+
+### Objective
+Enable bilingual MVP usage for core journeys.
+
+### Scope (minimum translated areas)
+- Auth
+- Client request creation and request status screens
+- Provider job queue and my jobs screens
+- Common validation and push-facing UI labels
+
+### Implementation Rules
+- Keep translation keys centralized.
+- Avoid hardcoded strings in newly touched core screens.
+
+### Testability Requirements
+Automated:
+- `flutter analyze` passes.
+
+Manual:
+- Language selector works at runtime.
+- Switching language updates visible text without app reinstall.
+- Core flow text is complete in ES and EN for scoped screens.
+
+### Exit Criteria
+- ES/EN selector available in app settings or onboarding.
+- All scoped screens translated both languages.
+- No mixed-language critical CTA text in scoped screens.
+
+---
+
+## Verification Commands
+Run after each task and again before sprint close.
 
 ```bash
-# Backend tests
+# Backend tests (Docker)
 cd /home/carlossprekelsen/Marketplace-Evelyn
 docker run --rm -v "$PWD/backend:/app" -w /app node:22-alpine sh -lc "npm test -- --runInBand"
 
 # Flutter checks
 cd /home/carlossprekelsen/Marketplace-Evelyn/app
-flutter analyze
+/home/carlossprekelsen/development/flutter/bin/flutter analyze
+```
 
-# Release APK (example)
-flutter build apk --release --dart-define=API_BASE_URL=https://claudiasrv.duckdns.org --dart-define=ENV=production
-# Rename to homely-v<version>-build<build>-YYYYMMDD-HHMM.apk
+Release build checkpoint (when shipping a new app build):
+
+```bash
+cd /home/carlossprekelsen/Marketplace-Evelyn/app
+/home/carlossprekelsen/development/flutter/bin/flutter build apk --release \
+  --dart-define=API_BASE_URL=https://claudiasrv.duckdns.org \
+  --dart-define=ENV=production
 ```
 
 ---
 
-## Commit Message Convention for Sprint 7
-
-```text
-sprint7: harden foreground push visibility with local notifications
-sprint7: add push delivery observability counters and logs
-sprint7: add locate-me action to address map flow
-sprint7: rebrand client/provider core UI to Homely visual system
-sprint7: add Google Sign-In for client and provider
-sprint7: add ES/EN localization for core flows
-```
+## Sprint 7 Exit Checklist
+- [ ] All task rows in Status Board are `Completed`.
+- [ ] `CLAUDE.md` is up to date with final Sprint 7 decisions.
+- [ ] Backend tests pass in Docker.
+- [ ] `flutter analyze` passes.
+- [ ] Final APK built and renamed with Sprint 7 version/build naming.
+- [ ] Release notes updated with user-visible changes.
+- [ ] No secrets in tracked files.
 
 ---
 
-## Deferred Items Carried Forward
-
-| Deferred Item | Reason |
+## Deferred (Still Out of Scope for Sprint 7)
+| Item | Reason |
 |---|---|
-| Full web admin (user management, request management) | Foundation exists; expand incrementally in Sprint 7+ |
-| Recurring requests in bottom nav | Low usage; keep available via dedicated screen |
-| Full i18n across every screen | Sprint 7 focuses core flows first (ES/EN) |
-| Online payments | Still out of scope for current MVP phase |
-| Full technical rebrand (IDs/package/Firebase rename) | Deferred to dedicated migration sprint |
+| Full web admin expansion (advanced user/request ops) | Keep Sprint 7 focused on mobile quality + growth |
+| End-to-end push analytics stack (BigQuery/dashboarding) | Lightweight observability is enough for this sprint |
+| Online payments | Not in MVP scope yet |
+| Full technical rebrand (package id/Firebase project rename) | Requires dedicated migration sprint |
