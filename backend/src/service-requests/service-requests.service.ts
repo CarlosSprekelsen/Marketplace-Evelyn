@@ -538,6 +538,9 @@ export class ServiceRequestsService {
             district_id: request.district_id,
           },
         },
+        {
+          context: 'provider_new_service_request',
+        },
       );
     } catch (error) {
       this.logger.warn(
@@ -563,6 +566,8 @@ export class ServiceRequestsService {
           type: 'REQUEST_ACCEPTED',
           request_id: request.id,
         },
+      }, {
+        context: 'client_request_accepted',
       });
     } catch (error) {
       this.logger.warn(

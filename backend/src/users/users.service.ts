@@ -203,6 +203,8 @@ export class UsersService {
             pending_count: String(pendingCount),
             district_id: user.district_id,
           },
+        }, {
+          context: 'provider_pending_requests_hint',
         });
       }
     }
@@ -251,6 +253,8 @@ export class UsersService {
         data: {
           type: isVerified ? 'ACCOUNT_VERIFIED' : 'ACCOUNT_UNVERIFIED',
         },
+      }, {
+        context: isVerified ? 'provider_account_verified' : 'provider_account_unverified',
       });
     }
 
@@ -275,6 +279,8 @@ export class UsersService {
         data: {
           type: isBlocked ? 'ACCOUNT_BLOCKED' : 'ACCOUNT_UNBLOCKED',
         },
+      }, {
+        context: isBlocked ? 'account_blocked' : 'account_unblocked',
       });
     }
 

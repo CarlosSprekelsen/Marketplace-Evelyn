@@ -13,7 +13,7 @@ Sprints 0–6 complete. The following works end-to-end:
 - Provider registration, job queue (district-filtered), accept/start/complete, cancellation
 - Admin panel in Flutter: pending providers queue, verify/block actions
 - Web admin panel at `/admin-web/` with session-based auth (Redis), pricing CRUD, user list
-- Push notifications on provider verification changes and new job postings (FCM legacy HTTP API)
+- Push notifications on provider verification changes and new job postings (FCM HTTP v1 via Firebase Admin SDK; legacy fallback only if explicitly configured)
 - Address geolocation flow with GPS auto-center + Google Maps pin + provider navigation deeplink
 - Multi-currency pricing (default AED, configurable per district via web admin)
 - Simplified booking form: saved address required, district auto-selected
@@ -83,6 +83,7 @@ IN_PROGRESS → CANCELLED  (admin only)
 - All timestamps UTC in DB and backend — Flutter converts to local for display only
 - `setVerified()` validates `role === PROVIDER` before updating; sends FCM notification
 - `setBlocked()` sends FCM notification on block/unblock; guards null `fcm_token`
+- Push observability is exposed to admins at `GET /admin/ops/push-observability` (in-memory counters + recent delivery events)
 
 ## Flutter Conventions
 
@@ -185,7 +186,7 @@ backend/src/
   pricing/                  # Quote and pricing rules
   districts/                # District catalog
   admin/                    # Admin API module — separate from auth
-  notifications/            # FCM push notifications (legacy HTTP API)
+  notifications/            # FCM push notifications (HTTP v1 primary + optional legacy fallback)
   seeds/                    # admin.seed.ts (npm run seed:admin)
   admin-web/                # Web admin panel — Handlebars views, session auth
   data-source.ts            # TypeORM CLI data source (explicit entity imports)

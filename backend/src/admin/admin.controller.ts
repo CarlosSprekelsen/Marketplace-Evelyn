@@ -21,6 +21,7 @@ import { SetRequestStatusDto } from './dto/set-request-status.dto';
 import { AdminResetPasswordDto } from './dto/admin-reset-password.dto';
 import { PricingService } from '../pricing/pricing.service';
 import { UpdatePricingRuleDto } from './dto/update-pricing-rule.dto';
+import { PushNotificationsService } from '../notifications/push-notifications.service';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -32,6 +33,7 @@ export class AdminController {
     private readonly usersService: UsersService,
     private readonly serviceRequestsService: ServiceRequestsService,
     private readonly pricingService: PricingService,
+    private readonly pushNotificationsService: PushNotificationsService,
   ) {}
 
   @Get('users')
@@ -98,6 +100,12 @@ export class AdminController {
       price_per_hour: dto.price_per_hour,
       currency: dto.currency,
     });
+  }
+
+  @Get('ops/push-observability')
+  @ApiOperation({ summary: 'Get push delivery counters and recent events' })
+  getPushObservability() {
+    return this.pushNotificationsService.getObservabilitySnapshot();
   }
 
   private sanitizeUser(user: Record<string, any>) {
