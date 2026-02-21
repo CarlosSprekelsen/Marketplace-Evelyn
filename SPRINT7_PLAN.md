@@ -8,6 +8,8 @@
 - Sprint 7 execution tasks are clearly scoped so AI agents can implement one task per commit.
 - No secrets are committed.
 
+**Mandatory AI Rule:** Before starting **any** Sprint 7 task, read root `CLAUDE.md`. If implementation reality changes any documented decisions, update `CLAUDE.md` in the same task flow before continuing.
+
 ---
 
 ## Dev Environment
@@ -39,10 +41,16 @@ flutter analyze
 
 Execute Sprint 7 tasks in order.
 
+Before each task starts:
+1. Re-read `CLAUDE.md` (mandatory).
+2. Confirm this sprint file and `CLAUDE.md` are aligned.
+3. If misaligned, update `CLAUDE.md` first, then continue task execution.
+
 After each task:
 1. Run the verification commands listed in that task.
 2. Commit with one clear message (`sprint7: ...`).
-3. Move to next task only when verification passes.
+3. Keep `CLAUDE.md` updated if any decision/policy changed during the task.
+4. Move to next task only when verification passes.
 
 **Rule:** One task = one commit. Do not bundle unrelated changes.
 
@@ -100,7 +108,7 @@ If any item is stale, update `CLAUDE.md` first or stop and resolve before implem
 ## Sprint 7 Scope
 
 ### 7.1 Reliability Track
-- Add visible foreground local notification behavior for FCM on provider/client app when app is open.
+- [x] Add visible foreground local notification behavior for FCM on provider/client app when app is open. (Implemented 2026-02-21)
 - Add push observability (structured delivery logs and lightweight counters).
 - Add explicit "Locate me" button in map/address flow.
 
