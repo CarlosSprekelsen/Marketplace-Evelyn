@@ -5,16 +5,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, MoreThan, Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { PushNotificationsService } from '../notifications/push-notifications.service';
+import { ServiceRequest, ServiceRequestStatus } from '../service-requests/service-request.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(ServiceRequest)
+    private serviceRequestsRepository: Repository<ServiceRequest>,
     private readonly pushNotificationsService: PushNotificationsService,
   ) {}
 
@@ -155,11 +158,55 @@ export class UsersService {
   }
 
   async setFcmToken(userId: string, fcmToken: string | null): Promise<User> {
-    await this.usersRepository.update(userId, { fcm_token: fcmToken });
+    const normalizedToken = fcmToken?.trim() || null;
+    const existing = await this.usersRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'fcm_token'],
+    });
+    if (!existing) {
+      throw new NotFoundException('User not found');
+    }
+
+    const tokenChanged = existing.fcm_token !== normalizedToken;
+    await this.usersRepository.update(userId, { fcm_token: normalizedToken });
     const user = await this.findById(userId);
     if (!user) {
       throw new Error('User not found after FCM token update');
     }
+
+    if (
+      tokenChanged &&
+      normalizedToken &&
+      user.role === UserRole.PROVIDER &&
+      user.is_verified &&
+      !user.is_blocked &&
+      user.is_available
+    ) {
+      const pendingCount = await this.serviceRequestsRepository.count({
+        where: {
+          district_id: user.district_id,
+          status: ServiceRequestStatus.PENDING,
+          provider_id: IsNull(),
+          expires_at: MoreThan(new Date()),
+        },
+      });
+
+      if (pendingCount > 0) {
+        await this.pushNotificationsService.sendToTokens([normalizedToken], {
+          title: 'Solicitudes disponibles',
+          body:
+            pendingCount === 1
+              ? 'Hay 1 solicitud pendiente en tu distrito.'
+              : `Hay ${pendingCount} solicitudes pendientes en tu distrito.`,
+          data: {
+            type: 'PENDING_REQUESTS_AVAILABLE',
+            pending_count: String(pendingCount),
+            district_id: user.district_id,
+          },
+        });
+      }
+    }
+
     return user;
   }
 

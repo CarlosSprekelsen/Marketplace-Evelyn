@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ServiceRequest, ServiceRequestStatus } from './service-request.entity';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { PricingService } from '../pricing/pricing.service';
@@ -499,21 +499,30 @@ export class ServiceRequestsService {
 
   private async notifyProvidersForNewRequest(request: ServiceRequest): Promise<void> {
     try {
-      const providers = await this.usersRepository.find({
-        where: {
-          role: UserRole.PROVIDER,
-          district_id: request.district_id,
-          is_verified: true,
-          is_blocked: false,
-          is_available: true,
-          fcm_token: Not(IsNull()),
-        },
-        select: ['id', 'fcm_token'],
-      });
+      const providers = await this.usersRepository
+        .createQueryBuilder('u')
+        .select(['u.id', 'u.fcm_token'])
+        .where('u.role = :role', { role: UserRole.PROVIDER })
+        .andWhere('u.district_id = :districtId', { districtId: request.district_id })
+        .andWhere('u.is_verified = true')
+        .andWhere('u.is_blocked = false')
+        .andWhere('u.is_available = true')
+        .andWhere('u.fcm_token IS NOT NULL')
+        .andWhere("TRIM(u.fcm_token) <> ''")
+        .getMany();
 
       if (providers.length === 0) {
+        const eligibleCount = await this.usersRepository.count({
+          where: {
+            role: UserRole.PROVIDER,
+            district_id: request.district_id,
+            is_verified: true,
+            is_blocked: false,
+            is_available: true,
+          },
+        });
         this.logger.warn(
-          `No eligible providers with FCM token found for request ${request.id} in district ${request.district_id}.`,
+          `No eligible providers with non-empty FCM token found for request ${request.id} in district ${request.district_id}. eligibleProvidersWithoutTokenFilter=${eligibleCount}.`,
         );
         return;
       }

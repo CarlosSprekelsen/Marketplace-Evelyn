@@ -16,6 +16,8 @@ describe('ServiceRequestsService', () => {
   let usersRepository: {
     find: jest.Mock;
     findOne: jest.Mock;
+    createQueryBuilder: jest.Mock;
+    count: jest.Mock;
   };
   let ratingsRepository: {
     findOne: jest.Mock;
@@ -59,6 +61,16 @@ describe('ServiceRequestsService', () => {
     usersRepository = {
       find: jest.fn().mockResolvedValue([]),
       findOne: jest.fn(),
+      createQueryBuilder: jest.fn(() => {
+        const qb = {
+          select: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          getMany: jest.fn().mockResolvedValue([]),
+        };
+        return qb;
+      }),
+      count: jest.fn().mockResolvedValue(0),
     };
     ratingsRepository = {
       findOne: jest.fn(),
