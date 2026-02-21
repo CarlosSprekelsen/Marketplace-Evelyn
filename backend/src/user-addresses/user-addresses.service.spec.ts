@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UserAddressesService } from './user-addresses.service';
-import { AddressLabel } from './user-address.entity';
+import { UserAddress, AddressLabel } from './user-address.entity';
 
 describe('UserAddressesService', () => {
   let service: UserAddressesService;
@@ -16,6 +16,10 @@ describe('UserAddressesService', () => {
     count: jest.Mock;
     update: jest.Mock;
     delete: jest.Mock;
+    manager: {
+      transaction: jest.Mock;
+      update: jest.Mock;
+    };
   };
   let districtsRepository: { findOne: jest.Mock };
 
@@ -29,6 +33,7 @@ describe('UserAddressesService', () => {
   };
 
   beforeEach(() => {
+    const managerUpdate = jest.fn();
     addressesRepository = {
       create: jest.fn((data) => ({ id: 'addr-1', ...data })),
       save: jest.fn((data) => Promise.resolve({ id: 'addr-1', ...data })),
@@ -37,6 +42,12 @@ describe('UserAddressesService', () => {
       count: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      manager: {
+        transaction: jest.fn(async (cb: (manager: { update: jest.Mock }) => Promise<void>) => {
+          await cb({ update: managerUpdate });
+        }),
+        update: managerUpdate,
+      },
     };
     districtsRepository = { findOne: jest.fn() };
 
@@ -132,19 +143,24 @@ describe('UserAddressesService', () => {
   });
 
   describe('setDefault', () => {
-    it('should set address as default and clear others', async () => {
+    it('should set address as default and clear others via transaction', async () => {
       const addr = { id: 'addr-1', user_id: userId, is_default: false };
       addressesRepository.findOne.mockResolvedValue(addr);
 
-      await service.setDefault('addr-1', userId);
+      const result = await service.setDefault('addr-1', userId);
 
-      expect(addressesRepository.update).toHaveBeenCalledWith(
+      expect(addressesRepository.manager.transaction).toHaveBeenCalled();
+      expect(addressesRepository.manager.update).toHaveBeenCalledWith(
+        UserAddress,
         { user_id: userId },
         { is_default: false },
       );
-      expect(addressesRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ is_default: true }),
+      expect(addressesRepository.manager.update).toHaveBeenCalledWith(
+        UserAddress,
+        { id: 'addr-1' },
+        { is_default: true },
       );
+      expect(result.is_default).toBe(true);
     });
   });
 });

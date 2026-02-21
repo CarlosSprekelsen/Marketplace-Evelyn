@@ -11,6 +11,51 @@ INFRA_DIR="$PROJECT_ROOT/infra"
 ENV_FILE="$INFRA_DIR/.env.production"
 COMPOSE_FILE="$INFRA_DIR/docker-compose.prod.yml"
 
+wait_for_backend_health() {
+  echo "=== Waiting for backend health check ==="
+  local max_retries=30
+  local retry=0
+
+  until docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T backend wget -q --spider http://localhost:3000/health 2>/dev/null; do
+    retry=$((retry + 1))
+    if [ "$retry" -ge "$max_retries" ]; then
+      echo "ERROR: Backend did not become healthy after $max_retries attempts."
+      docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs backend --tail=50
+      exit 1
+    fi
+    echo "  Waiting... ($retry/$max_retries)"
+    sleep 2
+  done
+
+  echo "Backend is healthy."
+}
+
+ensure_latest_migration_compiled() {
+  local latest_migration_js="$1"
+  if [ -z "$latest_migration_js" ]; then
+    echo "No source migration file detected; skipping migration artifact check."
+    return 0
+  fi
+
+  if docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T backend sh -lc "test -f dist/migrations/$latest_migration_js"; then
+    echo "Latest migration artifact found in container: dist/migrations/$latest_migration_js"
+    return 0
+  fi
+
+  echo "WARNING: dist/migrations/$latest_migration_js not found after cached build."
+  echo "Forcing backend rebuild without cache to avoid stale migration artifacts..."
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --no-cache backend
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps --force-recreate backend
+  wait_for_backend_health
+
+  if ! docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T backend sh -lc "test -f dist/migrations/$latest_migration_js"; then
+    echo "ERROR: Migration artifact still missing after no-cache rebuild: dist/migrations/$latest_migration_js"
+    exit 1
+  fi
+
+  echo "Latest migration artifact confirmed after no-cache rebuild."
+}
+
 echo "=== Marketplace Deployment ==="
 echo "Project root: $PROJECT_ROOT"
 
@@ -25,6 +70,13 @@ echo "=== Pulling latest code ==="
 cd "$PROJECT_ROOT"
 git pull origin main
 
+LATEST_MIGRATION_TS=$(ls -1 "$PROJECT_ROOT/backend/src/migrations/"*.ts 2>/dev/null | sort | tail -n 1 || true)
+LATEST_MIGRATION_JS=""
+if [ -n "$LATEST_MIGRATION_TS" ]; then
+  LATEST_MIGRATION_JS="$(basename "${LATEST_MIGRATION_TS%.ts}.js")"
+  echo "Latest source migration detected: $LATEST_MIGRATION_JS"
+fi
+
 echo "=== Ensuring data services are running (non-destructive) ==="
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d postgres redis
 
@@ -34,20 +86,8 @@ docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build backend
 echo "=== Recreating backend only (keep postgres/redis running) ==="
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps --force-recreate backend
 
-echo "=== Waiting for backend health check ==="
-MAX_RETRIES=30
-RETRY=0
-until docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T backend wget -q --spider http://localhost:3000/health 2>/dev/null; do
-  RETRY=$((RETRY + 1))
-  if [ $RETRY -ge $MAX_RETRIES ]; then
-    echo "ERROR: Backend did not become healthy after $MAX_RETRIES attempts."
-    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs backend --tail=50
-    exit 1
-  fi
-  echo "  Waiting... ($RETRY/$MAX_RETRIES)"
-  sleep 2
-done
-echo "Backend is healthy."
+wait_for_backend_health
+ensure_latest_migration_compiled "$LATEST_MIGRATION_JS"
 
 echo "=== Running migrations ==="
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T backend node -e "
