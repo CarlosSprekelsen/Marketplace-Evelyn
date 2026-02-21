@@ -9,9 +9,18 @@ class AddressesRepository {
 
   Future<List<UserAddress>> getMyAddresses() async {
     final response = await _dio.get('/user-addresses');
-    final data = response.data as List<dynamic>;
-    return data
-        .map((item) => UserAddress.fromJson(item as Map<String, dynamic>))
+    final raw = response.data;
+
+    final list = switch (raw) {
+      List<dynamic> values => values,
+      Map<String, dynamic> values when values['data'] is List<dynamic> =>
+        values['data'] as List<dynamic>,
+      _ => const <dynamic>[],
+    };
+
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map(UserAddress.fromJson)
         .toList(growable: false);
   }
 

@@ -14,10 +14,9 @@ import 'addresses_provider.dart';
 const double _defaultLatitude = 25.2048;
 const double _defaultLongitude = 55.2708;
 const String _placeholderGoogleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
-const String _defaultStaticMapsApiKey = 'AIzaSyBWwjcR_LUhKmcsY_4cei_Ohzv9fdKgWJI';
 const String _staticMapsApiKey = String.fromEnvironment(
   'GOOGLE_MAPS_API_KEY',
-  defaultValue: _defaultStaticMapsApiKey,
+  defaultValue: _placeholderGoogleMapsApiKey,
 );
 
 bool get _hasStaticMapsApiKey =>
@@ -87,9 +86,26 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
-          child: Text(
-            'Error: ${mapDioErrorToMessage(error)}',
-            style: const TextStyle(color: Colors.red),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 12),
+                Text(
+                  'Error: ${mapDioErrorToMessage(error)}',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => ref.invalidate(userAddressesProvider),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Reintentar'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
